@@ -19,25 +19,41 @@ $new_membership = $pricing_options['new_90'];
         <form id="ielts-ms-register-form" class="ielts-ms-form">
             <h3><?php _e('Account Information', 'ielts-membership-system'); ?></h3>
             
-            <div class="ielts-ms-form-group">
-                <label for="reg_username"><?php _e('Username', 'ielts-membership-system'); ?> *</label>
-                <input type="text" id="reg_username" name="username" required>
+            <div class="ielts-ms-form-row">
+                <div class="ielts-ms-form-group">
+                    <label for="reg_first_name"><?php _e('First Name', 'ielts-membership-system'); ?> *</label>
+                    <input type="text" id="reg_first_name" name="first_name" required>
+                </div>
+                
+                <div class="ielts-ms-form-group">
+                    <label for="reg_last_name"><?php _e('Last Name', 'ielts-membership-system'); ?> *</label>
+                    <input type="text" id="reg_last_name" name="last_name" required>
+                </div>
             </div>
             
-            <div class="ielts-ms-form-group">
-                <label for="reg_email"><?php _e('Email', 'ielts-membership-system'); ?> *</label>
-                <input type="email" id="reg_email" name="email" required>
+            <div class="ielts-ms-form-row">
+                <div class="ielts-ms-form-group">
+                    <label for="reg_username"><?php _e('Username', 'ielts-membership-system'); ?> *</label>
+                    <input type="text" id="reg_username" name="username" required>
+                </div>
+                
+                <div class="ielts-ms-form-group">
+                    <label for="reg_email"><?php _e('Email', 'ielts-membership-system'); ?> *</label>
+                    <input type="email" id="reg_email" name="email" required>
+                </div>
             </div>
             
-            <div class="ielts-ms-form-group">
-                <label for="reg_password"><?php _e('Password', 'ielts-membership-system'); ?> *</label>
-                <input type="password" id="reg_password" name="password" required>
-                <small><?php _e('Minimum 8 characters', 'ielts-membership-system'); ?></small>
-            </div>
-            
-            <div class="ielts-ms-form-group">
-                <label for="reg_confirm_password"><?php _e('Confirm Password', 'ielts-membership-system'); ?> *</label>
-                <input type="password" id="reg_confirm_password" name="confirm_password" required>
+            <div class="ielts-ms-form-row">
+                <div class="ielts-ms-form-group">
+                    <label for="reg_password"><?php _e('Password', 'ielts-membership-system'); ?> *</label>
+                    <input type="password" id="reg_password" name="password" required>
+                    <small><?php _e('Minimum 8 characters', 'ielts-membership-system'); ?></small>
+                </div>
+                
+                <div class="ielts-ms-form-group">
+                    <label for="reg_confirm_password"><?php _e('Confirm Password', 'ielts-membership-system'); ?> *</label>
+                    <input type="password" id="reg_confirm_password" name="confirm_password" required>
+                </div>
             </div>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">

@@ -42,13 +42,31 @@
 2. Get your API keys:
    - Log in to Stripe Dashboard
    - Go to Developers > API Keys
-   - Copy your "Publishable key" and "Secret key"
+   - **IMPORTANT**: Use your **Standard API keys** (not Restricted keys)
+     - **Publishable key**: Starts with `pk_test_` (test mode) or `pk_live_` (live mode)
+     - **Secret key**: Starts with `sk_test_` (test mode) or `sk_live_` (live mode)
+   - Click the "Reveal test key" button to see your Secret key
+   - Copy both keys
+   
+   **Note**: Do NOT use "Restricted keys" or "Legacy API keys" - use the standard "Publishable key" and "Secret key" shown at the top of the API keys page.
+
 3. In WordPress:
    - Go to **Membership > Settings**
    - Check "Enable Stripe"
-   - Paste your Publishable Key
-   - Paste your Secret Key
+   - Paste your **Publishable Key** (starts with `pk_test_` or `pk_live_`)
+   - Paste your **Secret Key** (starts with `sk_test_` or `sk_live_`)
    - Click "Save Changes"
+
+**Testing your Stripe integration:**
+- When using test mode keys (`pk_test_` and `sk_test_`), you can use test card numbers
+- Test card: `4242 4242 4242 4242`
+- Use any future expiry date (e.g., 12/25)
+- Use any 3-digit CVC (e.g., 123)
+- The Stripe payment form will automatically include fields for:
+  - Card number
+  - Expiry date (MM/YY)
+  - CVC code
+  - Cardholder name (optional)
 
 **Optional Webhook Setup (for advanced features):**
 1. In Stripe Dashboard, go to Developers > Webhooks

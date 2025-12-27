@@ -151,6 +151,8 @@ class IELTS_MS_Login_Manager {
     public function handle_register_with_payment() {
         check_ajax_referer('ielts_ms_nonce', 'nonce');
         
+        $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
+        $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
         $username = sanitize_user($_POST['username']);
         $email = sanitize_email($_POST['email']);
         $password = $_POST['password'];
@@ -199,6 +201,14 @@ class IELTS_MS_Login_Manager {
         // Set user role to subscriber
         $user = new WP_User($user_id);
         $user->set_role('subscriber');
+        
+        // Update user meta with first and last name if provided
+        if (!empty($first_name)) {
+            update_user_meta($user_id, 'first_name', $first_name);
+        }
+        if (!empty($last_name)) {
+            update_user_meta($user_id, 'last_name', $last_name);
+        }
         
         // Store registration data in user meta for completion after payment
         update_user_meta($user_id, 'ielts_ms_registration_pending', true);
