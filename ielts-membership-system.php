@@ -82,8 +82,9 @@ function ielts_ms_redirect_logged_in_homepage() {
     
     // Get custom homepage for logged-in users
     $logged_in_homepage_id = get_option('ielts_ms_logged_in_homepage_id', 0);
+    $current_homepage_id = get_option('page_on_front');
     
-    if ($logged_in_homepage_id && $logged_in_homepage_id != get_option('page_on_front')) {
+    if ($logged_in_homepage_id && $logged_in_homepage_id != $current_homepage_id) {
         $redirect_url = get_permalink($logged_in_homepage_id);
         if ($redirect_url) {
             wp_redirect($redirect_url);

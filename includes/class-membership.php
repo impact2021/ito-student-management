@@ -197,20 +197,7 @@ class IELTS_MS_Membership {
         }
         
         // Check if user has active membership in database first (source of truth)
-        $has_active = $this->has_active_membership($user_id);
-        
-        // Verify role consistency - if database says active, user should have 'active' role
-        if ($has_active) {
-            $user = get_userdata($user_id);
-            if ($user && !in_array('active', $user->roles)) {
-                // Fix inconsistency: add active role
-                $user->remove_role('expired');
-                $user->add_role('active');
-            }
-            return true;
-        }
-        
-        return false;
+        return $this->has_active_membership($user_id);
     }
     
     /**
