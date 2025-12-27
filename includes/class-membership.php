@@ -148,9 +148,12 @@ class IELTS_MS_Membership {
                 'status' => 'expired',
                 'updated_date' => current_time('mysql')
             ),
-            array('user_id' => $user_id),
+            array(
+                'user_id' => $user_id,
+                'status' => 'active'
+            ),
             array('%s', '%s'),
-            array('%d')
+            array('%d', '%s')
         );
         
         // Update user role to 'expired'

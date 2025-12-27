@@ -100,13 +100,17 @@ function ielts_ms_check_expired_memberships_callback() {
     global $wpdb;
     $table = IELTS_MS_Database::get_memberships_table();
     
-    // Get all active memberships that have expired
+    // Get all active memberships that have expired (only need user_id)
     $expired_memberships = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM $table WHERE status = %s AND end_date < NOW()",
+            "SELECT user_id FROM $table WHERE status = %s AND end_date < NOW()",
             'active'
         )
     );
+    
+    if (empty($expired_memberships)) {
+        return;
+    }
     
     $membership = new IELTS_MS_Membership();
     foreach ($expired_memberships as $member) {

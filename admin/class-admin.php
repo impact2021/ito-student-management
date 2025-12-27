@@ -110,13 +110,31 @@ class IELTS_MS_Admin {
             update_option('ielts_ms_stripe_webhook_secret', sanitize_text_field($_POST['stripe_webhook_secret']));
             
             update_option('ielts_ms_custom_login_enabled', isset($_POST['custom_login_enabled']));
-            update_option('ielts_ms_logged_in_homepage_id', intval($_POST['logged_in_homepage_id']));
             
-            // Update pricing
-            update_option('ielts_ms_price_new_90', floatval($_POST['price_new_90']));
-            update_option('ielts_ms_price_extend_7', floatval($_POST['price_extend_7']));
-            update_option('ielts_ms_price_extend_30', floatval($_POST['price_extend_30']));
-            update_option('ielts_ms_price_extend_90', floatval($_POST['price_extend_90']));
+            // Validate and save logged-in homepage
+            $homepage_id = isset($_POST['logged_in_homepage_id']) ? intval($_POST['logged_in_homepage_id']) : 0;
+            if ($homepage_id > 0) {
+                $page_status = get_post_status($homepage_id);
+                if ($page_status === 'publish') {
+                    update_option('ielts_ms_logged_in_homepage_id', $homepage_id);
+                }
+            } else {
+                update_option('ielts_ms_logged_in_homepage_id', 0);
+            }
+            
+            // Update pricing with validation
+            if (isset($_POST['price_new_90'])) {
+                update_option('ielts_ms_price_new_90', floatval($_POST['price_new_90']));
+            }
+            if (isset($_POST['price_extend_7'])) {
+                update_option('ielts_ms_price_extend_7', floatval($_POST['price_extend_7']));
+            }
+            if (isset($_POST['price_extend_30'])) {
+                update_option('ielts_ms_price_extend_30', floatval($_POST['price_extend_30']));
+            }
+            if (isset($_POST['price_extend_90'])) {
+                update_option('ielts_ms_price_extend_90', floatval($_POST['price_extend_90']));
+            }
             
             echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
         }
