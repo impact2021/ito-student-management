@@ -137,6 +137,9 @@ For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
 
+### Version 3.0.0
+- Updated plugin to version 3.0.0
+
 ### Version 2.0.0
 - Updated plugin to version 2.0.0
 - Fixed admin login loop: Admins can now access wp-admin without being redirected to the membership account page
