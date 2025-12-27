@@ -146,9 +146,9 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                 
                 <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
                     <button class="gateway-btn" data-gateway="stripe">
-                        <img src="<?php echo IELTS_MS_PLUGIN_URL; ?>assets/images/stripe-logo.png" alt="Stripe"
+                        <img src="<?php echo IELTS_MS_PLUGIN_URL; ?>assets/images/stripe-logo.png" alt="Credit Card"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                        <span style="display:none;">Stripe</span>
+                        <span style="display:none;">Credit Card</span>
                     </button>
                 <?php endif; ?>
             </div>

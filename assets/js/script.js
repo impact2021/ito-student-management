@@ -498,7 +498,18 @@ jQuery(document).ready(function($) {
             type: $(this).data('type')
         };
         
+        // Show payment gateway selector
         $('#payment-gateway-selector').slideDown();
+        
+        // Auto-trigger Stripe/Credit Card payment if Stripe is enabled
+        if (stripe && $('[data-gateway="stripe"]').length > 0) {
+            // Automatically start the Stripe payment process
+            setTimeout(function() {
+                processStripeInlinePayment(selectedPlan);
+            }, 300);
+        }
+        
+        // Scroll to payment section
         $('html, body').animate({
             scrollTop: $('#payment-gateway-selector').offset().top - 100
         }, 500);
