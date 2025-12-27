@@ -93,8 +93,9 @@ A complete membership and payment system for IELTS preparation courses with PayP
 
 This plugin integrates with the IELTS Course Manager plugin to control access:
 
-- Active members automatically get the "subscriber" role
-- Subscribers have access to all IELTS courses
+- Active members automatically get the "active" role
+- Expired members automatically get the "expired" role
+- Users with "active" role have access to all IELTS courses
 - Access is checked via the `ielts_cm_has_course_access` filter
 
 ## Pricing Plans
@@ -124,6 +125,13 @@ Users enrolled before January 1, 2026 can access the old course version via a li
 For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
+
+### Version 2.0.0
+- Updated plugin to version 2.0.0
+- Fixed admin login loop: Admins can now access wp-admin without being redirected to the membership account page
+- Implemented custom user roles: 'active' for users with active memberships and 'expired' for users with expired memberships
+- Added automatic daily cron job to update user roles based on membership status
+- Improved access control for administrators
 
 ### Version 1.2.0
 - Implemented Stripe inline payment using Payment Elements (no redirect to Stripe required)

@@ -19,7 +19,8 @@ class IELTS_MS_Shortcodes {
      * Login form shortcode
      */
     public function login_form($atts) {
-        if (is_user_logged_in()) {
+        // Don't redirect admins - they should have full access
+        if (is_user_logged_in() && !current_user_can('manage_options')) {
             $account_page_id = get_option('ielts_ms_account_page_id');
             if ($account_page_id) {
                 wp_redirect(get_permalink($account_page_id));
@@ -39,7 +40,8 @@ class IELTS_MS_Shortcodes {
      * Register form shortcode
      */
     public function register_form($atts) {
-        if (is_user_logged_in()) {
+        // Don't redirect admins - they should have full access
+        if (is_user_logged_in() && !current_user_can('manage_options')) {
             $account_page_id = get_option('ielts_ms_account_page_id');
             if ($account_page_id) {
                 wp_redirect(get_permalink($account_page_id));

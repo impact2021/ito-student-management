@@ -37,6 +37,11 @@ class IELTS_MS_Login_Manager {
             return;
         }
         
+        // Don't redirect admins - they should have full access
+        if (current_user_can('manage_options')) {
+            return;
+        }
+        
         // Redirect wp-login.php to custom login page
         if ($pagenow === 'wp-login.php' && !isset($_GET['action'])) {
             $login_page_id = get_option('ielts_ms_login_page_id');
@@ -118,7 +123,7 @@ class IELTS_MS_Login_Manager {
             wp_send_json_error(array('message' => $user_id->get_error_message()));
         }
         
-        // Set user role to subscriber
+        // Set user role to subscriber (no membership yet)
         $user = new WP_User($user_id);
         $user->set_role('subscriber');
         
