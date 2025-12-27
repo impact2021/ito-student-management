@@ -33,47 +33,72 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
         <p><?php printf(__('Welcome back, %s!', 'ielts-membership-system'), esc_html($user->display_name)); ?></p>
     </div>
     
-    <!-- Membership Status -->
-    <div class="ielts-ms-section">
-        <h3><?php _e('Membership Status', 'ielts-membership-system'); ?></h3>
+    <!-- Tabs Navigation -->
+    <div class="ielts-ms-tabs">
+        <div class="ielts-ms-tab-nav">
+            <button class="ielts-ms-tab-link active" data-tab="membership-status">
+                <?php _e('Membership Status', 'ielts-membership-system'); ?>
+            </button>
+            <button class="ielts-ms-tab-link" data-tab="extend-course">
+                <?php _e('Extend My Course', 'ielts-membership-system'); ?>
+            </button>
+            <button class="ielts-ms-tab-link" data-tab="payment-history">
+                <?php _e('Payment History', 'ielts-membership-system'); ?>
+            </button>
+            <button class="ielts-ms-tab-link" data-tab="account-settings">
+                <?php _e('Account Settings', 'ielts-membership-system'); ?>
+            </button>
+        </div>
         
-        <?php if ($has_membership): ?>
-            <div class="ielts-ms-membership-card active">
-                <div class="membership-status">
-                    <span class="status-badge active"><?php _e('Active', 'ielts-membership-system'); ?></span>
-                </div>
-                <div class="membership-details">
-                    <p><strong><?php _e('Access Expires:', 'ielts-membership-system'); ?></strong> 
-                        <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
-                    </p>
-                    <p><strong><?php _e('Days Remaining:', 'ielts-membership-system'); ?></strong> 
-                        <?php echo esc_html($days_remaining); ?>
-                    </p>
+        <!-- Tab Content -->
+        <div class="ielts-ms-tab-content">
+            
+            <!-- Membership Status Tab -->
+            <!-- Membership Status Tab -->
+            <div class="ielts-ms-tab-pane active" id="membership-status">
+                <div class="ielts-ms-section">
+                    <h3><?php _e('Membership Status', 'ielts-membership-system'); ?></h3>
+                    
+                    <?php if ($has_membership): ?>
+                        <div class="ielts-ms-membership-card active">
+                            <div class="membership-status">
+                                <span class="status-badge active"><?php _e('Active', 'ielts-membership-system'); ?></span>
+                            </div>
+                            <div class="membership-details">
+                                <p><strong><?php _e('Access Expires:', 'ielts-membership-system'); ?></strong> 
+                                    <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
+                                </p>
+                                <p><strong><?php _e('Days Remaining:', 'ielts-membership-system'); ?></strong> 
+                                    <?php echo esc_html($days_remaining); ?>
+                                </p>
+                            </div>
+                        </div>
+                    <?php elseif ($is_expired): ?>
+                        <div class="ielts-ms-membership-card expired">
+                            <div class="membership-status">
+                                <span class="status-badge expired"><?php _e('Expired', 'ielts-membership-system'); ?></span>
+                            </div>
+                            <div class="membership-details">
+                                <p><?php _e('Your membership expired on:', 'ielts-membership-system'); ?> 
+                                    <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
+                                </p>
+                                <p><?php _e('Renew your membership below to continue accessing courses.', 'ielts-membership-system'); ?></p>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="ielts-ms-membership-card no-membership">
+                            <p><?php _e('You do not have an active membership.', 'ielts-membership-system'); ?></p>
+                            <p><?php _e('Purchase a membership below to access all IELTS preparation courses.', 'ielts-membership-system'); ?></p>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
-        <?php elseif ($is_expired): ?>
-            <div class="ielts-ms-membership-card expired">
-                <div class="membership-status">
-                    <span class="status-badge expired"><?php _e('Expired', 'ielts-membership-system'); ?></span>
-                </div>
-                <div class="membership-details">
-                    <p><?php _e('Your membership expired on:', 'ielts-membership-system'); ?> 
-                        <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
-                    </p>
-                    <p><?php _e('Renew your membership below to continue accessing courses.', 'ielts-membership-system'); ?></p>
-                </div>
-            </div>
-        <?php else: ?>
-            <div class="ielts-ms-membership-card no-membership">
-                <p><?php _e('You do not have an active membership.', 'ielts-membership-system'); ?></p>
-                <p><?php _e('Purchase a membership below to access all IELTS preparation courses.', 'ielts-membership-system'); ?></p>
-            </div>
-        <?php endif; ?>
-    </div>
-    
-    <!-- Purchase/Extend Membership -->
-    <div class="ielts-ms-section">
-        <h3><?php echo ($has_membership || $is_expired) ? __('Extend Membership', 'ielts-membership-system') : __('Purchase Membership', 'ielts-membership-system'); ?></h3>
+            
+            <!-- Extend My Course Tab -->
+            <!-- Extend My Course Tab -->
+            <div class="ielts-ms-tab-pane" id="extend-course">
+                <div class="ielts-ms-section">
+                    <h3><?php echo ($has_membership || $is_expired) ? __('Extend Membership', 'ielts-membership-system') : __('Purchase Membership', 'ielts-membership-system'); ?></h3>
         
         <div class="ielts-ms-pricing-grid">
             <?php if (!$has_membership && !$is_expired): ?>
@@ -146,9 +171,9 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                 
                 <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
                     <button class="gateway-btn" data-gateway="stripe">
-                        <img src="<?php echo IELTS_MS_PLUGIN_URL; ?>assets/images/stripe-logo.png" alt="Stripe"
+                        <img src="<?php echo IELTS_MS_PLUGIN_URL; ?>assets/images/stripe-logo.png" alt="Credit Card"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                        <span style="display:none;">Stripe</span>
+                        <span style="display:none;">Credit Card</span>
                     </button>
                 <?php endif; ?>
             </div>
@@ -168,15 +193,61 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
             <?php endif; ?>
         </div>
         
-        <!-- Hidden PayPal form -->
-        <form id="paypal-form" method="post" action="" style="display: none;">
-            <input type="hidden" name="cmd" value="">
-        </form>
-    </div>
-    
-    <!-- Account Settings -->
-    <div class="ielts-ms-section">
-        <h3><?php _e('Account Settings', 'ielts-membership-system'); ?></h3>
+                    <!-- Hidden PayPal form -->
+                    <form id="paypal-form" method="post" action="" style="display: none;">
+                        <input type="hidden" name="cmd" value="">
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Payment History Tab -->
+            <?php if (!empty($payments)): ?>
+            <div class="ielts-ms-tab-pane" id="payment-history">
+                <div class="ielts-ms-section">
+                    <h3><?php _e('Payment History', 'ielts-membership-system'); ?></h3>
+                    
+                    <table class="ielts-ms-table">
+                        <thead>
+                            <tr>
+                                <th><?php _e('Date', 'ielts-membership-system'); ?></th>
+                                <th><?php _e('Amount', 'ielts-membership-system'); ?></th>
+                                <th><?php _e('Type', 'ielts-membership-system'); ?></th>
+                                <th><?php _e('Method', 'ielts-membership-system'); ?></th>
+                                <th><?php _e('Status', 'ielts-membership-system'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($payments as $payment): ?>
+                                <tr>
+                                    <td><?php echo esc_html(date('M j, Y', strtotime($payment->payment_date))); ?></td>
+                                    <td><?php echo '$' . number_format($payment->amount, 2); ?> <?php echo esc_html($payment->currency); ?></td>
+                                    <td><?php echo esc_html(ucfirst($payment->payment_type)); ?></td>
+                                    <td><?php echo esc_html(ucfirst($payment->payment_method)); ?></td>
+                                    <td>
+                                        <span class="status-badge <?php echo esc_attr($payment->payment_status); ?>">
+                                            <?php echo esc_html(ucfirst($payment->payment_status)); ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <?php else: ?>
+            <div class="ielts-ms-tab-pane" id="payment-history">
+                <div class="ielts-ms-section">
+                    <h3><?php _e('Payment History', 'ielts-membership-system'); ?></h3>
+                    <p><?php _e('No payment history available.', 'ielts-membership-system'); ?></p>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <!-- Account Settings Tab -->
+            <!-- Account Settings Tab -->
+            <div class="ielts-ms-tab-pane" id="account-settings">
+                <div class="ielts-ms-section">
+                    <h3><?php _e('Account Settings', 'ielts-membership-system'); ?></h3>
         
         <div class="ielts-ms-settings-grid">
             <!-- Update Email -->
@@ -234,44 +305,14 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                 </form>
             </div>
         </div>
-    </div>
-    
-    <!-- Payment History -->
-    <?php if (!empty($payments)): ?>
-    <div class="ielts-ms-section">
-        <h3><?php _e('Payment History', 'ielts-membership-system'); ?></h3>
-        
-        <table class="ielts-ms-table">
-            <thead>
-                <tr>
-                    <th><?php _e('Date', 'ielts-membership-system'); ?></th>
-                    <th><?php _e('Amount', 'ielts-membership-system'); ?></th>
-                    <th><?php _e('Type', 'ielts-membership-system'); ?></th>
-                    <th><?php _e('Method', 'ielts-membership-system'); ?></th>
-                    <th><?php _e('Status', 'ielts-membership-system'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($payments as $payment): ?>
-                    <tr>
-                        <td><?php echo esc_html(date('M j, Y', strtotime($payment->payment_date))); ?></td>
-                        <td><?php echo '$' . number_format($payment->amount, 2); ?> <?php echo esc_html($payment->currency); ?></td>
-                        <td><?php echo esc_html(ucfirst($payment->payment_type)); ?></td>
-                        <td><?php echo esc_html(ucfirst($payment->payment_method)); ?></td>
-                        <td>
-                            <span class="status-badge <?php echo esc_attr($payment->payment_status); ?>">
-                                <?php echo esc_html(ucfirst($payment->payment_status)); ?>
-                            </span>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
+                </div>
+            </div>
+            
+        </div><!-- End of tab-content -->
+    </div><!-- End of tabs -->
     
     <!-- Logout -->
-    <div class="ielts-ms-section">
+    <div class="ielts-ms-section" style="margin-top: 20px;">
         <a href="<?php echo wp_logout_url(get_permalink(get_page_by_path('membership-login'))); ?>" class="ielts-ms-btn ielts-ms-btn-link">
             <?php _e('Logout', 'ielts-membership-system'); ?>
         </a>

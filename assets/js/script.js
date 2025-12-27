@@ -4,6 +4,19 @@
 
 jQuery(document).ready(function($) {
     
+    // Tab switching functionality
+    $('.ielts-ms-tab-link').on('click', function() {
+        const targetTab = $(this).data('tab');
+        
+        // Remove active class from all tabs and panes
+        $('.ielts-ms-tab-link').removeClass('active');
+        $('.ielts-ms-tab-pane').removeClass('active');
+        
+        // Add active class to clicked tab and corresponding pane
+        $(this).addClass('active');
+        $('#' + targetTab).addClass('active');
+    });
+    
     // Initialize Stripe if enabled
     let stripe = null;
     let elements = null;
@@ -14,19 +27,30 @@ jQuery(document).ready(function($) {
     }
     
     // Show/hide Stripe payment section based on gateway selection
+    // Note: For registration form, don't show the section yet - it will be shown after account creation
     $('input[name="payment_gateway"]').on('change', function() {
         const gateway = $(this).val();
-        // Show stripe payment section for both 'stripe' and when we're doing inline payment
-        if (gateway === 'stripe' && stripe) {
+        const $form = $(this).closest('form');
+        const isRegistrationForm = $form.attr('id') === 'ielts-ms-register-form';
+        
+        // Only auto-show payment section for non-registration forms (account page)
+        // Registration form will show it after account creation
+        if (gateway === 'stripe' && stripe && !isRegistrationForm) {
             $('#stripe-payment-section').slideDown();
-        } else {
+        } else if (!isRegistrationForm) {
             $('#stripe-payment-section').slideUp();
         }
     });
     
     // Initialize Stripe payment section on page load if Stripe is selected
+    // But NOT for registration form - it needs to create account first
     if ($('input[name="payment_gateway"]:checked').val() === 'stripe' && stripe) {
-        $('#stripe-payment-section').show();
+        const $checkedRadio = $('input[name="payment_gateway"]:checked');
+        const isRegistrationForm = $checkedRadio.closest('form').attr('id') === 'ielts-ms-register-form';
+        
+        if (!isRegistrationForm) {
+            $('#stripe-payment-section').show();
+        }
     }
     
     // Login form
@@ -113,12 +137,14 @@ jQuery(document).ready(function($) {
         const gateway = $('input[name="payment_gateway"]:checked').val();
         
         // Validate form data first
+        const first_name = $('#reg_first_name').val();
+        const last_name = $('#reg_last_name').val();
         const username = $('#reg_username').val();
         const email = $('#reg_email').val();
         const password = $('#reg_password').val();
         const confirm_password = $('#reg_confirm_password').val();
         
-        if (!username || !email || !password || !confirm_password) {
+        if (!first_name || !last_name || !username || !email || !password || !confirm_password) {
             $message.removeClass('success').addClass('error').text('Please fill in all required fields').show();
             $button.removeClass('loading').prop('disabled', false);
             return;
@@ -154,6 +180,8 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'ielts_ms_register_with_payment',
                 nonce: ieltsMS.nonce,
+                first_name: $('#reg_first_name').val(),
+                last_name: $('#reg_last_name').val(),
                 username: $('#reg_username').val(),
                 email: $('#reg_email').val(),
                 password: $('#reg_password').val(),
@@ -276,6 +304,8 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'ielts_ms_register_with_payment',
                 nonce: ieltsMS.nonce,
+                first_name: $('#reg_first_name').val(),
+                last_name: $('#reg_last_name').val(),
                 username: $('#reg_username').val(),
                 email: $('#reg_email').val(),
                 password: $('#reg_password').val(),
@@ -481,7 +511,18 @@ jQuery(document).ready(function($) {
             type: $(this).data('type')
         };
         
+        // Show payment gateway selector
         $('#payment-gateway-selector').slideDown();
+        
+        // Auto-trigger Stripe/Credit Card payment if Stripe is enabled
+        if (stripe && $('[data-gateway="stripe"]').length > 0) {
+            // Automatically start the Stripe payment process
+            setTimeout(function() {
+                processStripeInlinePayment(selectedPlan);
+            }, 300);
+        }
+        
+        // Scroll to payment section
         $('html, body').animate({
             scrollTop: $('#payment-gateway-selector').offset().top - 100
         }, 500);
