@@ -125,6 +125,11 @@ For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
 
+### Version 1.1
+- Added Documentation page in admin sidebar with comprehensive shortcodes reference
+- Detailed descriptions and usage examples for all available shortcodes
+- Updated plugin version to 1.1
+
 ### Version 1.0.0
 - Initial release
 - PayPal and Stripe integration
