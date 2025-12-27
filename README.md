@@ -66,6 +66,17 @@ A complete membership and payment system for IELTS preparation courses with PayP
 
 - Enable/disable custom login page replacement
 - Default: WordPress login redirects to custom login page
+- Set a custom homepage for logged-in users (non-admins will be redirected to this page when visiting the homepage)
+
+### Pricing Settings
+
+Customize membership pricing in **Membership > Settings** under the Pricing Settings section:
+- **New 90-Day Membership** - Default: $24.95 USD
+- **1 Week Extension** - Default: $5.00 USD
+- **1 Month Extension** - Default: $10.00 USD
+- **3 Months Extension** - Default: $20.00 USD
+
+All prices can be adjusted to suit your business needs.
 
 ## Usage
 
@@ -132,6 +143,10 @@ For support or questions, contact the plugin maintainer at IELTStestONLINE.
 - Implemented custom user roles: 'active' for users with active memberships and 'expired' for users with expired memberships
 - Added automatic daily cron job to update user roles based on membership status
 - Improved access control for administrators
+- **NEW**: Added configurable pricing settings in admin panel for enrollment and extensions
+- **NEW**: Added custom homepage redirect for logged-in users (non-admins)
+- Fixed SQL query to use prepared statements for security
+- Improved database status verification in course access check
 
 ### Version 1.2.0
 - Implemented Stripe inline payment using Payment Elements (no redirect to Stripe required)

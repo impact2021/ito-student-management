@@ -85,25 +85,25 @@ abstract class IELTS_MS_Payment_Gateway {
         return array(
             'new_90' => array(
                 'label' => '90 Days Membership',
-                'price' => 24.95,
+                'price' => floatval(get_option('ielts_ms_price_new_90', 24.95)),
                 'days' => 90,
                 'type' => 'new'
             ),
             'extend_7' => array(
                 'label' => '1 Week Extension',
-                'price' => 5.00,
+                'price' => floatval(get_option('ielts_ms_price_extend_7', 5.00)),
                 'days' => 7,
                 'type' => 'extension'
             ),
             'extend_30' => array(
                 'label' => '1 Month Extension',
-                'price' => 10.00,
+                'price' => floatval(get_option('ielts_ms_price_extend_30', 10.00)),
                 'days' => 30,
                 'type' => 'extension'
             ),
             'extend_90' => array(
                 'label' => '3 Months Extension',
-                'price' => 20.00,
+                'price' => floatval(get_option('ielts_ms_price_extend_90', 20.00)),
                 'days' => 90,
                 'type' => 'extension'
             )

@@ -60,8 +60,37 @@ function ielts_ms_init() {
     if (!wp_next_scheduled('ielts_ms_check_expired_memberships')) {
         wp_schedule_event(time(), 'daily', 'ielts_ms_check_expired_memberships');
     }
+    
+    // Redirect logged-in users to custom homepage
+    add_action('template_redirect', 'ielts_ms_redirect_logged_in_homepage');
 }
 add_action('plugins_loaded', 'ielts_ms_init');
+
+/**
+ * Redirect logged-in users to custom homepage
+ */
+function ielts_ms_redirect_logged_in_homepage() {
+    // Only redirect on the actual homepage
+    if (!is_front_page() || !is_user_logged_in()) {
+        return;
+    }
+    
+    // Don't redirect admins
+    if (current_user_can('manage_options')) {
+        return;
+    }
+    
+    // Get custom homepage for logged-in users
+    $logged_in_homepage_id = get_option('ielts_ms_logged_in_homepage_id', 0);
+    
+    if ($logged_in_homepage_id && $logged_in_homepage_id != get_option('page_on_front')) {
+        $redirect_url = get_permalink($logged_in_homepage_id);
+        if ($redirect_url) {
+            wp_redirect($redirect_url);
+            exit;
+        }
+    }
+}
 
 /**
  * Cron job to check and expire memberships
@@ -72,7 +101,10 @@ function ielts_ms_check_expired_memberships_callback() {
     
     // Get all active memberships that have expired
     $expired_memberships = $wpdb->get_results(
-        "SELECT * FROM $table WHERE status = 'active' AND end_date < NOW()"
+        $wpdb->prepare(
+            "SELECT * FROM $table WHERE status = %s AND end_date < NOW()",
+            'active'
+        )
     );
     
     $membership = new IELTS_MS_Membership();

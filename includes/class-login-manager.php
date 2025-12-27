@@ -32,13 +32,18 @@ class IELTS_MS_Login_Manager {
             return;
         }
         
-        // Don't redirect if user is already logged in or if it's an AJAX request
-        if (is_user_logged_in() || (defined('DOING_AJAX') && DOING_AJAX)) {
+        // Don't redirect if it's an AJAX request
+        if (defined('DOING_AJAX') && DOING_AJAX) {
             return;
         }
         
         // Don't redirect admins - they should have full access
         if (current_user_can('manage_options')) {
+            return;
+        }
+        
+        // Don't redirect if user is already logged in
+        if (is_user_logged_in()) {
             return;
         }
         
