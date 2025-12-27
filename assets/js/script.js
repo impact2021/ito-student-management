@@ -54,23 +54,49 @@ jQuery(document).ready(function($) {
         $button.addClass('loading').prop('disabled', true);
         $message.hide();
         
+        const gateway = $('input[name="payment_gateway"]:checked').val();
+        
         $.ajax({
             url: ieltsMS.ajaxUrl,
             type: 'POST',
             data: {
-                action: 'ielts_ms_register',
+                action: 'ielts_ms_register_with_payment',
                 nonce: ieltsMS.nonce,
                 username: $('#reg_username').val(),
                 email: $('#reg_email').val(),
                 password: $('#reg_password').val(),
-                confirm_password: $('#reg_confirm_password').val()
+                confirm_password: $('#reg_confirm_password').val(),
+                payment_gateway: gateway,
+                membership_plan: $('input[name="membership_plan"]').val(),
+                membership_amount: $('input[name="membership_amount"]').val(),
+                membership_days: $('input[name="membership_days"]').val()
             },
             success: function(response) {
                 if (response.success) {
-                    $message.removeClass('error').addClass('success').text(response.data.message).show();
-                    setTimeout(function() {
-                        window.location.href = response.data.redirect;
-                    }, 1000);
+                    if (response.data.redirect_url) {
+                        // Redirect to payment gateway (Stripe Checkout or PayPal)
+                        window.location.href = response.data.redirect_url;
+                    } else if (response.data.form_data) {
+                        // Build PayPal form
+                        const $form = $('#paypal-form');
+                        $form.attr('action', response.data.redirect_url || response.data.form_action);
+                        $form.empty();
+                        
+                        $.each(response.data.form_data, function(key, value) {
+                            $form.append($('<input>').attr({
+                                type: 'hidden',
+                                name: key,
+                                value: value
+                            }));
+                        });
+                        
+                        $form.submit();
+                    } else {
+                        $message.removeClass('error').addClass('success').text(response.data.message).show();
+                        setTimeout(function() {
+                            window.location.href = response.data.redirect;
+                        }, 1000);
+                    }
                 } else {
                     $message.removeClass('success').addClass('error').text(response.data.message).show();
                     $button.removeClass('loading').prop('disabled', false);

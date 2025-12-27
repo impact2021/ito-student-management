@@ -175,6 +175,7 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
             $user_id = isset($session['metadata']['user_id']) ? intval($session['metadata']['user_id']) : 0;
             $duration_days = isset($session['metadata']['duration_days']) ? intval($session['metadata']['duration_days']) : 0;
             $payment_type = isset($session['metadata']['payment_type']) ? $session['metadata']['payment_type'] : 'new';
+            $is_registration = isset($session['metadata']['is_registration']) && $session['metadata']['is_registration'] === 'true';
             
             if ($user_id && $duration_days) {
                 // Update payment record
@@ -195,6 +196,15 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
                 // Create/extend membership
                 $membership = new IELTS_MS_Membership();
                 $membership->create_membership($user_id, $duration_days, $payment_id);
+                
+                    // If this was a registration, complete the registration
+                    if ($is_registration) {
+                        delete_user_meta($user_id, 'ielts_ms_registration_pending');
+                        delete_user_meta($user_id, 'ielts_ms_registration_timestamp');
+                        
+                        // Send welcome email
+                        wp_new_user_notification($user_id, null, 'user');
+                    }
             }
         }
         

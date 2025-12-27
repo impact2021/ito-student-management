@@ -160,23 +160,44 @@ class IELTS_MS_PayPal_Gateway extends IELTS_MS_Payment_Gateway {
             $custom = isset($paypal_data['custom']) ? $paypal_data['custom'] : '';
             $amount = isset($paypal_data['mc_gross']) ? floatval($paypal_data['mc_gross']) : 0;
             
-            // Parse custom data
-            $custom_parts = explode('|', $custom);
-            if (count($custom_parts) >= 2) {
-                $user_id = intval($custom_parts[0]);
-                $duration_days = intval($custom_parts[1]);
-                $payment_type = isset($custom_parts[2]) ? $custom_parts[2] : 'new';
-                
-                if ($payment_status === 'Completed') {
-                    // Check if transaction already processed
-                    $existing = $this->get_payment_by_transaction($txn_id);
-                    if (!$existing) {
-                        // Record payment
-                        $payment_id = $this->record_payment($user_id, $amount, $duration_days, $txn_id, 'completed', $payment_type);
+            // Try to parse as JSON first (new format for registration)
+            $custom_data = json_decode($custom, true);
+            $is_registration = false;
+            
+            if ($custom_data && is_array($custom_data)) {
+                // New JSON format
+                $user_id = isset($custom_data['user_id']) ? intval($custom_data['user_id']) : 0;
+                $duration_days = isset($custom_data['duration_days']) ? intval($custom_data['duration_days']) : 0;
+                $payment_type = isset($custom_data['payment_type']) ? $custom_data['payment_type'] : 'new';
+                $is_registration = isset($custom_data['is_registration']) && $custom_data['is_registration'];
+            } else {
+                // Old pipe-separated format for backwards compatibility
+                $custom_parts = explode('|', $custom);
+                if (count($custom_parts) >= 2) {
+                    $user_id = intval($custom_parts[0]);
+                    $duration_days = intval($custom_parts[1]);
+                    $payment_type = isset($custom_parts[2]) ? $custom_parts[2] : 'new';
+                }
+            }
+            
+            if (isset($user_id) && isset($duration_days) && $payment_status === 'Completed') {
+                // Check if transaction already processed
+                $existing = $this->get_payment_by_transaction($txn_id);
+                if (!$existing) {
+                    // Record payment
+                    $payment_id = $this->record_payment($user_id, $amount, $duration_days, $txn_id, 'completed', $payment_type);
+                    
+                    // Create/extend membership
+                    $membership = new IELTS_MS_Membership();
+                    $membership->create_membership($user_id, $duration_days, $payment_id);
+                    
+                    // If this was a registration, complete the registration
+                    if ($is_registration) {
+                        delete_user_meta($user_id, 'ielts_ms_registration_pending');
+                        delete_user_meta($user_id, 'ielts_ms_registration_timestamp');
                         
-                        // Create/extend membership
-                        $membership = new IELTS_MS_Membership();
-                        $membership->create_membership($user_id, $duration_days, $payment_id);
+                        // Send welcome email
+                        wp_new_user_notification($user_id, null, 'user');
                     }
                 }
             }
