@@ -79,10 +79,15 @@ class IELTS_MS_Membership {
             );
         }
         
-        // Grant subscriber role if user doesn't have it
+        // Grant 'active' role to user
         $user = get_userdata($user_id);
-        if ($user && !in_array('subscriber', $user->roles)) {
-            $user->add_role('subscriber');
+        if ($user) {
+            // Remove 'expired' role if present
+            $user->remove_role('expired');
+            // Add 'active' role
+            if (!in_array('active', $user->roles)) {
+                $user->add_role('active');
+            }
         }
         
         return $membership_id;
@@ -137,16 +142,32 @@ class IELTS_MS_Membership {
         global $wpdb;
         $table = IELTS_MS_Database::get_memberships_table();
         
-        return $wpdb->update(
+        $result = $wpdb->update(
             $table,
             array(
                 'status' => 'expired',
                 'updated_date' => current_time('mysql')
             ),
-            array('user_id' => $user_id),
+            array(
+                'user_id' => $user_id,
+                'status' => 'active'
+            ),
             array('%s', '%s'),
-            array('%d')
+            array('%d', '%s')
         );
+        
+        // Update user role to 'expired'
+        $user = get_userdata($user_id);
+        if ($user) {
+            // Remove 'active' role if present
+            $user->remove_role('active');
+            // Add 'expired' role
+            if (!in_array('expired', $user->roles)) {
+                $user->add_role('expired');
+            }
+        }
+        
+        return $result;
     }
     
     /**
@@ -178,7 +199,7 @@ class IELTS_MS_Membership {
             return $has_access;
         }
         
-        // Check if user has active membership
+        // Check if user has active membership in database first (source of truth)
         return $this->has_active_membership($user_id);
     }
     

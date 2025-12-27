@@ -84,6 +84,13 @@ class IELTS_MS_Admin {
         register_setting('ielts_ms_settings', 'ielts_ms_custom_login_enabled');
         register_setting('ielts_ms_settings', 'ielts_ms_login_page_id');
         register_setting('ielts_ms_settings', 'ielts_ms_account_page_id');
+        register_setting('ielts_ms_settings', 'ielts_ms_logged_in_homepage_id');
+        
+        // Pricing settings
+        register_setting('ielts_ms_settings', 'ielts_ms_price_new_90');
+        register_setting('ielts_ms_settings', 'ielts_ms_price_extend_7');
+        register_setting('ielts_ms_settings', 'ielts_ms_price_extend_30');
+        register_setting('ielts_ms_settings', 'ielts_ms_price_extend_90');
     }
     
     /**
@@ -103,6 +110,31 @@ class IELTS_MS_Admin {
             update_option('ielts_ms_stripe_webhook_secret', sanitize_text_field($_POST['stripe_webhook_secret']));
             
             update_option('ielts_ms_custom_login_enabled', isset($_POST['custom_login_enabled']));
+            
+            // Validate and save logged-in homepage
+            $homepage_id = isset($_POST['logged_in_homepage_id']) ? intval($_POST['logged_in_homepage_id']) : 0;
+            if ($homepage_id > 0) {
+                $page_status = get_post_status($homepage_id);
+                if ($page_status === 'publish') {
+                    update_option('ielts_ms_logged_in_homepage_id', $homepage_id);
+                }
+            } else {
+                update_option('ielts_ms_logged_in_homepage_id', 0);
+            }
+            
+            // Update pricing with validation
+            if (isset($_POST['price_new_90'])) {
+                update_option('ielts_ms_price_new_90', floatval($_POST['price_new_90']));
+            }
+            if (isset($_POST['price_extend_7'])) {
+                update_option('ielts_ms_price_extend_7', floatval($_POST['price_extend_7']));
+            }
+            if (isset($_POST['price_extend_30'])) {
+                update_option('ielts_ms_price_extend_30', floatval($_POST['price_extend_30']));
+            }
+            if (isset($_POST['price_extend_90'])) {
+                update_option('ielts_ms_price_extend_90', floatval($_POST['price_extend_90']));
+            }
             
             echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
         }
@@ -249,6 +281,53 @@ class IELTS_MS_Admin {
                                 echo 'Account page not found';
                             }
                             ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Logged-In Homepage</th>
+                        <td>
+                            <?php
+                            $logged_in_homepage_id = get_option('ielts_ms_logged_in_homepage_id', 0);
+                            wp_dropdown_pages(array(
+                                'name' => 'logged_in_homepage_id',
+                                'selected' => $logged_in_homepage_id,
+                                'show_option_none' => 'Default Homepage',
+                                'option_none_value' => 0
+                            ));
+                            ?>
+                            <p class="description">Select a page to redirect logged-in users to when they visit the homepage</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2>Pricing Settings</h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">New 90-Day Membership</th>
+                        <td>
+                            $<input type="number" step="0.01" min="0" name="price_new_90" value="<?php echo esc_attr(get_option('ielts_ms_price_new_90', 24.95)); ?>" class="small-text"> USD
+                            <p class="description">Price for a new 90-day membership</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">1 Week Extension</th>
+                        <td>
+                            $<input type="number" step="0.01" min="0" name="price_extend_7" value="<?php echo esc_attr(get_option('ielts_ms_price_extend_7', 5.00)); ?>" class="small-text"> USD
+                            <p class="description">Price for a 7-day extension</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">1 Month Extension</th>
+                        <td>
+                            $<input type="number" step="0.01" min="0" name="price_extend_30" value="<?php echo esc_attr(get_option('ielts_ms_price_extend_30', 10.00)); ?>" class="small-text"> USD
+                            <p class="description">Price for a 30-day extension</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">3 Months Extension</th>
+                        <td>
+                            $<input type="number" step="0.01" min="0" name="price_extend_90" value="<?php echo esc_attr(get_option('ielts_ms_price_extend_90', 20.00)); ?>" class="small-text"> USD
+                            <p class="description">Price for a 90-day extension</p>
                         </td>
                     </tr>
                 </table>

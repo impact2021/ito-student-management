@@ -3,7 +3,7 @@
  * Plugin Name: IELTS Membership System
  * Plugin URI: https://www.ieltstestonline.com/
  * Description: Membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
- * Version: 1.1.0
+ * Version: 2.0.0
  * Author: IELTStestONLINE
  * Author URI: https://www.ieltstestonline.com/
  * Text Domain: ielts-membership-system
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IELTS_MS_VERSION', '1.1.0');
+define('IELTS_MS_VERSION', '2.0.0');
 define('IELTS_MS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
@@ -55,14 +55,95 @@ function ielts_ms_init() {
     if (is_admin()) {
         new IELTS_MS_Admin();
     }
+    
+    // Schedule cron job for membership expiration check
+    if (!wp_next_scheduled('ielts_ms_check_expired_memberships')) {
+        wp_schedule_event(time(), 'daily', 'ielts_ms_check_expired_memberships');
+    }
+    
+    // Redirect logged-in users to custom homepage
+    add_action('template_redirect', 'ielts_ms_redirect_logged_in_homepage');
 }
 add_action('plugins_loaded', 'ielts_ms_init');
+
+/**
+ * Redirect logged-in users to custom homepage
+ */
+function ielts_ms_redirect_logged_in_homepage() {
+    // Only redirect on the actual homepage
+    if (!is_front_page() || !is_user_logged_in()) {
+        return;
+    }
+    
+    // Don't redirect admins
+    if (current_user_can('manage_options')) {
+        return;
+    }
+    
+    // Get custom homepage for logged-in users
+    $logged_in_homepage_id = get_option('ielts_ms_logged_in_homepage_id', 0);
+    $current_homepage_id = get_option('page_on_front');
+    
+    if ($logged_in_homepage_id && $logged_in_homepage_id != $current_homepage_id) {
+        $redirect_url = get_permalink($logged_in_homepage_id);
+        if ($redirect_url) {
+            wp_redirect($redirect_url);
+            exit;
+        }
+    }
+}
+
+/**
+ * Cron job to check and expire memberships
+ */
+function ielts_ms_check_expired_memberships_callback() {
+    global $wpdb;
+    $table = IELTS_MS_Database::get_memberships_table();
+    
+    // Get all active memberships that have expired (only need user_id)
+    $expired_memberships = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT user_id FROM $table WHERE status = %s AND end_date < NOW()",
+            'active'
+        )
+    );
+    
+    if (empty($expired_memberships)) {
+        return;
+    }
+    
+    $membership = new IELTS_MS_Membership();
+    foreach ($expired_memberships as $member) {
+        $membership->expire_membership($member->user_id);
+    }
+}
+add_action('ielts_ms_check_expired_memberships', 'ielts_ms_check_expired_memberships_callback');
+
+/**
+ * Register custom user roles
+ */
+function ielts_ms_register_roles() {
+    // Add 'active' role for users with active memberships
+    add_role('active', 'Active Member', array(
+        'read' => true,
+        'level_0' => true
+    ));
+    
+    // Add 'expired' role for users with expired memberships
+    add_role('expired', 'Expired Member', array(
+        'read' => true,
+        'level_0' => true
+    ));
+}
 
 /**
  * Activation hook
  */
 function ielts_ms_activate() {
     IELTS_MS_Database::create_tables();
+    
+    // Register custom roles
+    ielts_ms_register_roles();
     
     // Create default pages if they don't exist
     ielts_ms_create_default_pages();
@@ -75,6 +156,12 @@ register_activation_hook(__FILE__, 'ielts_ms_activate');
  * Deactivation hook
  */
 function ielts_ms_deactivate() {
+    // Clear scheduled cron job
+    $timestamp = wp_next_scheduled('ielts_ms_check_expired_memberships');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'ielts_ms_check_expired_memberships');
+    }
+    
     flush_rewrite_rules();
 }
 register_deactivation_hook(__FILE__, 'ielts_ms_deactivate');
