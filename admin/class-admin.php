@@ -161,9 +161,9 @@ class IELTS_MS_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Publishable Key <span style="color: red;">*</span></th>
+                        <th scope="row">Publishable Key <span style="color: red;" aria-label="required">*</span></th>
                         <td>
-                            <input type="text" name="stripe_publishable_key" value="<?php echo esc_attr($stripe_publishable_key); ?>" class="regular-text" placeholder="pk_test_... or pk_live_...">
+                            <input type="text" name="stripe_publishable_key" value="<?php echo esc_attr($stripe_publishable_key); ?>" class="regular-text" placeholder="pk_test_... or pk_live_..." aria-required="true">
                             <p class="description">
                                 <strong>Where to find:</strong> <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a> → Developers → API Keys → "Publishable key"<br>
                                 <strong>Test mode:</strong> Starts with <code>pk_test_</code> (e.g., <code>pk_test_51A1B2C3...</code>)<br>
@@ -173,9 +173,9 @@ class IELTS_MS_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Secret Key <span style="color: red;">*</span></th>
+                        <th scope="row">Secret Key <span style="color: red;" aria-label="required">*</span></th>
                         <td>
-                            <input type="password" name="stripe_secret_key" value="<?php echo esc_attr($stripe_secret_key); ?>" class="regular-text" placeholder="sk_test_... or sk_live_...">
+                            <input type="password" name="stripe_secret_key" value="<?php echo esc_attr($stripe_secret_key); ?>" class="regular-text" placeholder="sk_test_... or sk_live_..." aria-required="true">
                             <p class="description">
                                 <strong>Where to find:</strong> <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a> → Developers → API Keys → "Secret key" (click "Reveal test key" or "Reveal live key")<br>
                                 <strong>Test mode:</strong> Starts with <code>sk_test_</code> (e.g., <code>sk_test_51A1B2C3...</code>)<br>
@@ -185,7 +185,7 @@ class IELTS_MS_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Webhook Secret <span style="color: #999;">(Optional)</span></th>
+                        <th scope="row">Webhook Secret <span style="color: #646970;">(Optional)</span></th>
                         <td>
                             <input type="text" name="stripe_webhook_secret" value="<?php echo esc_attr($stripe_webhook_secret); ?>" class="regular-text" placeholder="whsec_...">
                             <p class="description">
