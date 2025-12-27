@@ -146,6 +146,10 @@ class IELTS_MS_Admin {
                 </table>
                 
                 <h2>Stripe Settings</h2>
+                <p class="description" style="margin-bottom: 15px;">
+                    <strong>Setup Instructions:</strong> Get your API keys from the <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a> (Developers → API Keys).
+                    Use <strong>test keys</strong> (starting with <code>pk_test_</code> and <code>sk_test_</code>) for testing, and <strong>live keys</strong> (starting with <code>pk_live_</code> and <code>sk_live_</code>) for production.
+                </p>
                 <table class="form-table">
                     <tr>
                         <th scope="row">Enable Stripe</th>
@@ -157,24 +161,45 @@ class IELTS_MS_Admin {
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Publishable Key</th>
+                        <th scope="row">Publishable Key <span style="color: red;" aria-label="required">*</span></th>
                         <td>
-                            <input type="text" name="stripe_publishable_key" value="<?php echo esc_attr($stripe_publishable_key); ?>" class="regular-text">
-                            <p class="description">Your Stripe publishable key</p>
+                            <input type="text" name="stripe_publishable_key" value="<?php echo esc_attr($stripe_publishable_key); ?>" class="regular-text" placeholder="pk_test_... or pk_live_..." aria-required="true">
+                            <p class="description">
+                                <strong>Where to find:</strong> <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a> → Developers → API Keys → "Publishable key"<br>
+                                <strong>Test mode:</strong> Starts with <code>pk_test_</code> (e.g., <code>pk_test_51A1B2C3...</code>)<br>
+                                <strong>Live mode:</strong> Starts with <code>pk_live_</code> (e.g., <code>pk_live_51A1B2C3...</code>)<br>
+                                <em>This key is safe to use in your website's client-side code.</em>
+                            </p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Secret Key</th>
+                        <th scope="row">Secret Key <span style="color: red;" aria-label="required">*</span></th>
                         <td>
-                            <input type="password" name="stripe_secret_key" value="<?php echo esc_attr($stripe_secret_key); ?>" class="regular-text">
-                            <p class="description">Your Stripe secret key</p>
+                            <input type="password" name="stripe_secret_key" value="<?php echo esc_attr($stripe_secret_key); ?>" class="regular-text" placeholder="sk_test_... or sk_live_..." aria-required="true">
+                            <p class="description">
+                                <strong>Where to find:</strong> <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a> → Developers → API Keys → "Secret key" (click "Reveal test key" or "Reveal live key")<br>
+                                <strong>Test mode:</strong> Starts with <code>sk_test_</code> (e.g., <code>sk_test_51A1B2C3...</code>)<br>
+                                <strong>Live mode:</strong> Starts with <code>sk_live_</code> (e.g., <code>sk_live_51A1B2C3...</code>)<br>
+                                <em>Keep this key confidential! Never share it publicly or commit it to version control.</em>
+                            </p>
                         </td>
                     </tr>
                     <tr>
-                        <th scope="row">Webhook Secret</th>
+                        <th scope="row">Webhook Secret <span style="color: #646970;">(Optional)</span></th>
                         <td>
-                            <input type="text" name="stripe_webhook_secret" value="<?php echo esc_attr($stripe_webhook_secret); ?>" class="regular-text">
-                            <p class="description">Webhook endpoint: <?php echo admin_url('admin-ajax.php?action=ielts_ms_stripe_webhook'); ?></p>
+                            <input type="text" name="stripe_webhook_secret" value="<?php echo esc_attr($stripe_webhook_secret); ?>" class="regular-text" placeholder="whsec_...">
+                            <p class="description">
+                                <strong>Webhook Endpoint URL:</strong> <code><?php echo admin_url('admin-ajax.php?action=ielts_ms_stripe_webhook'); ?></code><br>
+                                <strong>Setup instructions:</strong><br>
+                                1. Go to <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Dashboard</a> → Developers → Webhooks<br>
+                                2. Click "Add endpoint"<br>
+                                3. Enter the URL above as the endpoint URL<br>
+                                4. Select event: <code>checkout.session.completed</code><br>
+                                5. Click "Add endpoint"<br>
+                                6. Click on your new webhook and reveal the "Signing secret" (starts with <code>whsec_</code>)<br>
+                                7. Copy and paste it here<br>
+                                <em>Webhooks ensure payment confirmations are securely verified. While optional, they are highly recommended for production use.</em>
+                            </p>
                         </td>
                     </tr>
                 </table>
