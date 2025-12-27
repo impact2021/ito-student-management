@@ -4,6 +4,19 @@
 
 jQuery(document).ready(function($) {
     
+    // Tab switching functionality
+    $('.ielts-ms-tab-link').on('click', function() {
+        const targetTab = $(this).data('tab');
+        
+        // Remove active class from all tabs and panes
+        $('.ielts-ms-tab-link').removeClass('active');
+        $('.ielts-ms-tab-pane').removeClass('active');
+        
+        // Add active class to clicked tab and corresponding pane
+        $(this).addClass('active');
+        $('#' + targetTab).addClass('active');
+    });
+    
     // Initialize Stripe if enabled
     let stripe = null;
     let elements = null;
