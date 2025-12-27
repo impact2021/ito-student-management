@@ -175,7 +175,7 @@ class IELTS_MS_Login_Manager {
             wp_send_json_error(array('message' => 'Email already registered'));
         }
         
-        if (empty($payment_gateway) || !in_array($payment_gateway, array('stripe', 'paypal'))) {
+        if (empty($payment_gateway) || !in_array($payment_gateway, array('stripe', 'paypal', 'stripe_inline'))) {
             wp_send_json_error(array('message' => 'Please select a payment method'));
         }
         
@@ -197,6 +197,12 @@ class IELTS_MS_Login_Manager {
         // Process payment based on gateway
         if ($payment_gateway === 'stripe') {
             $this->process_stripe_registration($user_id, $email, $membership_plan, $membership_amount, $membership_days);
+        } elseif ($payment_gateway === 'stripe_inline') {
+            // For inline Stripe payment, just return user_id to continue on client side
+            wp_send_json_success(array(
+                'user_id' => $user_id,
+                'message' => 'Account created. Please complete payment.'
+            ));
         } elseif ($payment_gateway === 'paypal') {
             $this->process_paypal_registration($user_id, $email, $membership_plan, $membership_amount, $membership_days);
         }

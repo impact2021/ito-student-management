@@ -70,6 +70,19 @@ $new_membership = $pricing_options['new_90'];
                 </div>
             </div>
             
+            <!-- Stripe Payment Element Container (for inline payment) -->
+            <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
+            <div id="stripe-payment-section" class="stripe-payment-section" style="display: none;">
+                <div class="ielts-ms-form-group">
+                    <label><?php _e('Card Details', 'ielts-membership-system'); ?></label>
+                    <div id="payment-element" class="stripe-payment-element">
+                        <!-- Stripe Elements will be inserted here -->
+                    </div>
+                    <div id="payment-errors" class="ielts-ms-message" style="display: none;"></div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
             <input type="hidden" name="membership_plan" value="new_90">
             <input type="hidden" name="membership_amount" value="<?php echo $new_membership['price']; ?>">
             <input type="hidden" name="membership_days" value="<?php echo $new_membership['days']; ?>">
