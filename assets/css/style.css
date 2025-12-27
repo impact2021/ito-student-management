@@ -456,3 +456,78 @@
     40% { content: ".."; }
     60%, 100% { content: "..."; }
 }
+
+/* Registration with Payment Styles */
+.ielts-ms-payment-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.payment-method-option {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-method-option:hover {
+    border-color: #0073aa;
+    background-color: #f5f5f5;
+}
+
+.payment-method-option input[type="radio"] {
+    margin-right: 10px;
+}
+
+.payment-method-option input[type="radio"]:checked + span {
+    font-weight: bold;
+    color: #0073aa;
+}
+
+.ielts-ms-membership-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.ielts-ms-membership-info h4 {
+    margin-top: 0;
+    font-size: 20px;
+}
+
+.ielts-ms-membership-info .price {
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    margin: 10px 0;
+}
+
+.ielts-ms-membership-info p {
+    margin-bottom: 0;
+    opacity: 0.9;
+}
+
+.ielts-ms-alert {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.ielts-ms-alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.ielts-ms-alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}

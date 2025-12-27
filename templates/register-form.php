@@ -6,14 +6,19 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+$pricing_options = IELTS_MS_Payment_Gateway::get_pricing_options();
+$new_membership = $pricing_options['new_90'];
 ?>
 
 <div class="ielts-ms-register-wrapper">
     <div class="ielts-ms-form-container">
         <h2><?php _e('Register', 'ielts-membership-system'); ?></h2>
-        <p><?php _e('Create an account to purchase a membership and access IELTS preparation courses.', 'ielts-membership-system'); ?></p>
+        <p><?php _e('Create your account and purchase a membership to access IELTS preparation courses.', 'ielts-membership-system'); ?></p>
         
         <form id="ielts-ms-register-form" class="ielts-ms-form">
+            <h3><?php _e('Account Information', 'ielts-membership-system'); ?></h3>
+            
             <div class="ielts-ms-form-group">
                 <label for="reg_username"><?php _e('Username', 'ielts-membership-system'); ?> *</label>
                 <input type="text" id="reg_username" name="username" required>
@@ -35,9 +40,43 @@ if (!defined('ABSPATH')) {
                 <input type="password" id="reg_confirm_password" name="confirm_password" required>
             </div>
             
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+            
+            <h3><?php _e('Membership & Payment', 'ielts-membership-system'); ?></h3>
+            <div class="ielts-ms-membership-info" style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <h4 style="margin-top: 0;"><?php echo esc_html($new_membership['label']); ?></h4>
+                <div class="price" style="font-size: 24px; font-weight: bold; color: #0073aa;">
+                    $<?php echo number_format($new_membership['price'], 2); ?> USD
+                </div>
+                <p style="margin-bottom: 0;"><?php _e('Full access to all IELTS preparation courses', 'ielts-membership-system'); ?></p>
+            </div>
+            
+            <div class="ielts-ms-form-group">
+                <label><?php _e('Select Payment Method', 'ielts-membership-system'); ?> *</label>
+                <div class="ielts-ms-payment-methods">
+                    <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
+                        <label class="payment-method-option">
+                            <input type="radio" name="payment_gateway" value="stripe" checked required>
+                            <span><?php _e('Credit Card (Stripe)', 'ielts-membership-system'); ?></span>
+                        </label>
+                    <?php endif; ?>
+                    
+                    <?php if (get_option('ielts_ms_paypal_enabled', true)): ?>
+                        <label class="payment-method-option">
+                            <input type="radio" name="payment_gateway" value="paypal" <?php echo !get_option('ielts_ms_stripe_enabled', true) ? 'checked' : ''; ?> required>
+                            <span><?php _e('PayPal', 'ielts-membership-system'); ?></span>
+                        </label>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <input type="hidden" name="membership_plan" value="new_90">
+            <input type="hidden" name="membership_amount" value="<?php echo $new_membership['price']; ?>">
+            <input type="hidden" name="membership_days" value="<?php echo $new_membership['days']; ?>">
+            
             <div class="ielts-ms-form-group">
                 <button type="submit" class="ielts-ms-btn ielts-ms-btn-primary">
-                    <?php _e('Register', 'ielts-membership-system'); ?>
+                    <?php _e('Register & Pay', 'ielts-membership-system'); ?>
                 </button>
             </div>
             
@@ -52,4 +91,7 @@ if (!defined('ABSPATH')) {
             </p>
         </div>
     </div>
+    
+    <!-- Hidden PayPal form for submission -->
+    <form id="paypal-form" method="post" style="display: none;"></form>
 </div>

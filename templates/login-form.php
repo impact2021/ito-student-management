@@ -8,9 +8,21 @@ if (!defined('ABSPATH')) {
 }
 
 $action = isset($_GET['action']) ? $_GET['action'] : 'login';
+$registration_status = isset($_GET['registration']) ? $_GET['registration'] : '';
+$payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
 ?>
 
 <div class="ielts-ms-login-wrapper">
+    <?php if ($registration_status === 'complete' && $payment_status === 'success'): ?>
+        <div class="ielts-ms-alert ielts-ms-alert-success" style="margin-bottom: 20px;">
+            <?php _e('Registration successful! Your membership has been activated. Please login below.', 'ielts-membership-system'); ?>
+        </div>
+    <?php elseif ($registration_status === 'cancelled'): ?>
+        <div class="ielts-ms-alert ielts-ms-alert-warning" style="margin-bottom: 20px;">
+            <?php _e('Payment was cancelled. Your account has been created but you need to purchase a membership to access courses.', 'ielts-membership-system'); ?>
+        </div>
+    <?php endif; ?>
+    
     <?php if ($action === 'reset_password' && isset($_GET['key']) && isset($_GET['login'])): ?>
         <!-- Reset Password Form -->
         <div class="ielts-ms-form-container">
