@@ -54,6 +54,15 @@ class IELTS_MS_Admin {
             'ielts-membership-payments',
             array($this, 'payments_page')
         );
+        
+        add_submenu_page(
+            'ielts-membership',
+            'Documentation',
+            'Documentation',
+            'manage_options',
+            'ielts-membership-documentation',
+            array($this, 'documentation_page')
+        );
     }
     
     /**
@@ -359,6 +368,112 @@ class IELTS_MS_Admin {
                     <?php endif; ?>
                 </tbody>
             </table>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Documentation page
+     */
+    public function documentation_page() {
+        ?>
+        <div class="wrap">
+            <h1>Membership System Documentation</h1>
+            
+            <div style="background: #fff; padding: 20px; margin-top: 20px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+                <h2>Available Shortcodes</h2>
+                <p>Use these shortcodes to display membership system pages on your WordPress site.</p>
+                
+                <hr style="margin: 20px 0;">
+                
+                <h3>Login Form</h3>
+                <p><code>[ielts_membership_login]</code></p>
+                <p><strong>Description:</strong> Displays the membership login form. This shortcode also includes forgot password and password reset functionality.</p>
+                <p><strong>Usage:</strong> Add this shortcode to any page or post where you want users to be able to log in.</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>User login with username/email and password</li>
+                    <li>Forgot password link and reset functionality</li>
+                    <li>Link to registration page</li>
+                    <li>Link to legacy course for pre-2026 enrollees</li>
+                    <li>Automatically redirects logged-in users to their account page</li>
+                </ul>
+                <p><strong>Default Page:</strong> <code>/membership-login/</code></p>
+                
+                <hr style="margin: 20px 0;">
+                
+                <h3>Registration Form</h3>
+                <p><code>[ielts_membership_register]</code></p>
+                <p><strong>Description:</strong> Displays the membership registration form for new users to create an account.</p>
+                <p><strong>Usage:</strong> Add this shortcode to any page or post where you want new users to register.</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>Create new user account</li>
+                    <li>Email and password fields</li>
+                    <li>Link to login page for existing users</li>
+                    <li>Automatically redirects logged-in users to their account page</li>
+                </ul>
+                <p><strong>Default Page:</strong> <code>/membership-register/</code></p>
+                
+                <hr style="margin: 20px 0;">
+                
+                <h3>Account Page</h3>
+                <p><code>[ielts_membership_account]</code></p>
+                <p><strong>Description:</strong> Displays the user account dashboard where members can manage their membership and account settings.</p>
+                <p><strong>Usage:</strong> Add this shortcode to any page where you want users to access their account dashboard.</p>
+                <p><strong>Features:</strong></p>
+                <ul>
+                    <li>View membership status and expiration date</li>
+                    <li>Purchase new membership (90 days for $24.95)</li>
+                    <li>Extend existing or expired membership (1 week, 1 month, or 3 months)</li>
+                    <li>Change email address</li>
+                    <li>Change password</li>
+                    <li>View payment history</li>
+                    <li>Logout functionality</li>
+                    <li>Requires user to be logged in (redirects to login page if not)</li>
+                </ul>
+                <p><strong>Default Page:</strong> <code>/my-account/</code></p>
+                
+                <hr style="margin: 20px 0;">
+                
+                <h3>Example Implementation</h3>
+                <p><strong>Creating a custom login page:</strong></p>
+                <ol>
+                    <li>Create a new page in WordPress (Pages → Add New)</li>
+                    <li>Give it a title like "Member Login"</li>
+                    <li>In the content area, add: <code>[ielts_membership_login]</code></li>
+                    <li>Publish the page</li>
+                </ol>
+                
+                <p><strong>Creating a custom account page:</strong></p>
+                <ol>
+                    <li>Create a new page in WordPress (Pages → Add New)</li>
+                    <li>Give it a title like "My Dashboard"</li>
+                    <li>In the content area, add: <code>[ielts_membership_account]</code></li>
+                    <li>Publish the page</li>
+                </ol>
+                
+                <hr style="margin: 20px 0;">
+                
+                <h3>Important Notes</h3>
+                <ul>
+                    <li><strong>Default Pages:</strong> The plugin automatically creates pages with these shortcodes during activation.</li>
+                    <li><strong>Custom Pages:</strong> You can create additional pages with these shortcodes if needed.</li>
+                    <li><strong>Redirects:</strong> Login and registration shortcodes automatically redirect logged-in users to the account page.</li>
+                    <li><strong>Security:</strong> The account page requires users to be logged in and will redirect to the login page if they're not.</li>
+                    <li><strong>Settings:</strong> Configure the custom login page and account page IDs in Membership → Settings.</li>
+                </ul>
+                
+                <hr style="margin: 20px 0;">
+                
+                <h3>Additional Resources</h3>
+                <p>For more information about the membership system, please refer to:</p>
+                <ul>
+                    <li><strong>Settings:</strong> Membership → Settings - Configure payment gateways and login options</li>
+                    <li><strong>Members:</strong> Membership → Members - View all members and their status</li>
+                    <li><strong>Payments:</strong> Membership → Payments - Track all payment transactions</li>
+                </ul>
+            </div>
         </div>
         <?php
     }
