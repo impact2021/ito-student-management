@@ -134,11 +134,24 @@ function ielts_ms_create_default_pages() {
  */
 function ielts_ms_enqueue_assets() {
     wp_enqueue_style('ielts-membership-style', IELTS_MS_PLUGIN_URL . 'assets/css/style.css', array(), IELTS_MS_VERSION);
-    wp_enqueue_script('ielts-membership-script', IELTS_MS_PLUGIN_URL . 'assets/js/script.js', array('jquery'), IELTS_MS_VERSION, true);
+    
+    // Enqueue Stripe.js if Stripe is enabled
+    if (get_option('ielts_ms_stripe_enabled', true)) {
+        wp_enqueue_script('stripe-js', 'https://js.stripe.com/v3/', array(), null, true);
+    }
+    
+    $script_deps = array('jquery');
+    if (get_option('ielts_ms_stripe_enabled', true)) {
+        $script_deps[] = 'stripe-js';
+    }
+    
+    wp_enqueue_script('ielts-membership-script', IELTS_MS_PLUGIN_URL . 'assets/js/script.js', $script_deps, IELTS_MS_VERSION, true);
     
     wp_localize_script('ielts-membership-script', 'ieltsMS', array(
         'ajaxUrl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('ielts_ms_nonce')
+        'nonce' => wp_create_nonce('ielts_ms_nonce'),
+        'stripePublicKey' => get_option('ielts_ms_stripe_publishable_key', ''),
+        'stripeEnabled' => get_option('ielts_ms_stripe_enabled', true)
     ));
 }
 add_action('wp_enqueue_scripts', 'ielts_ms_enqueue_assets');

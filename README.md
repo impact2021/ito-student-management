@@ -12,7 +12,7 @@ A complete membership and payment system for IELTS preparation courses with PayP
 
 - **Payment Integration**
   - PayPal Standard integration
-  - Stripe Checkout integration
+  - Stripe inline payment with Payment Elements (no redirect required)
   - Secure payment processing
   - Payment history tracking
 
@@ -124,6 +124,12 @@ Users enrolled before January 1, 2026 can access the old course version via a li
 For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
+
+### Version 1.2.0
+- Implemented Stripe inline payment using Payment Elements (no redirect to Stripe required)
+- Increased form width from 500px to 700px for better desktop viewing experience
+- Added support for embedded card payment directly on registration and account pages
+- Improved user experience with seamless payment flow
 
 ### Version 1.1.0
 - Added Documentation page in admin sidebar with comprehensive shortcodes reference

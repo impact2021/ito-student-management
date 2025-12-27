@@ -152,6 +152,20 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                     </button>
                 <?php endif; ?>
             </div>
+            
+            <!-- Stripe Inline Payment Section -->
+            <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
+            <div id="stripe-payment-section-account" class="stripe-payment-section" style="display: none; margin-top: 20px;">
+                <h4><?php _e('Card Details', 'ielts-membership-system'); ?></h4>
+                <div id="payment-element-account" class="stripe-payment-element">
+                    <!-- Stripe Elements will be inserted here -->
+                </div>
+                <div id="payment-errors-account" class="ielts-ms-message" style="display: none;"></div>
+                <button id="complete-payment-btn" class="ielts-ms-btn ielts-ms-btn-primary" style="margin-top: 15px; display: none;">
+                    <?php _e('Complete Payment', 'ielts-membership-system'); ?>
+                </button>
+            </div>
+            <?php endif; ?>
         </div>
         
         <!-- Hidden PayPal form -->

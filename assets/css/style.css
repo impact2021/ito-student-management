@@ -12,7 +12,7 @@
 }
 
 .ielts-ms-form-container {
-    max-width: 500px;
+    max-width: 700px;
     margin: 0 auto;
     background: #fff;
     padding: 40px;
@@ -530,4 +530,25 @@
     background-color: #fff3cd;
     border: 1px solid #ffeaa7;
     color: #856404;
+}
+
+/* Stripe Payment Element Styles */
+.stripe-payment-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.stripe-payment-element {
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 50px;
+}
+
+#payment-errors {
+    margin-top: 10px;
 }
