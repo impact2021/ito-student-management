@@ -44,10 +44,10 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                 </div>
                 <div class="membership-details">
                     <p><strong><?php _e('Access Expires:', 'ielts-membership-system'); ?></strong> 
-                        <?php echo date('F j, Y', strtotime($user_membership->end_date)); ?>
+                        <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
                     </p>
                     <p><strong><?php _e('Days Remaining:', 'ielts-membership-system'); ?></strong> 
-                        <?php echo $days_remaining; ?>
+                        <?php echo esc_html($days_remaining); ?>
                     </p>
                 </div>
             </div>
@@ -58,7 +58,7 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                 </div>
                 <div class="membership-details">
                     <p><?php _e('Your membership expired on:', 'ielts-membership-system'); ?> 
-                        <?php echo date('F j, Y', strtotime($user_membership->end_date)); ?>
+                        <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
                     </p>
                     <p><?php _e('Renew your membership below to continue accessing courses.', 'ielts-membership-system'); ?></p>
                 </div>
@@ -240,13 +240,13 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
             <tbody>
                 <?php foreach ($payments as $payment): ?>
                     <tr>
-                        <td><?php echo date('M j, Y', strtotime($payment->payment_date)); ?></td>
+                        <td><?php echo esc_html(date('M j, Y', strtotime($payment->payment_date))); ?></td>
                         <td><?php echo '$' . number_format($payment->amount, 2); ?> <?php echo esc_html($payment->currency); ?></td>
-                        <td><?php echo ucfirst($payment->payment_type); ?></td>
-                        <td><?php echo ucfirst($payment->payment_method); ?></td>
+                        <td><?php echo esc_html(ucfirst($payment->payment_type)); ?></td>
+                        <td><?php echo esc_html(ucfirst($payment->payment_method)); ?></td>
                         <td>
-                            <span class="status-badge <?php echo $payment->payment_status; ?>">
-                                <?php echo ucfirst($payment->payment_status); ?>
+                            <span class="status-badge <?php echo esc_attr($payment->payment_status); ?>">
+                                <?php echo esc_html(ucfirst($payment->payment_status)); ?>
                             </span>
                         </td>
                     </tr>
