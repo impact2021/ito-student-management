@@ -243,6 +243,12 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
     public function create_payment_intent() {
         check_ajax_referer('ielts_ms_nonce', 'nonce');
         
+        // Validate required POST parameters
+        if (!isset($_POST['amount']) || !isset($_POST['duration_days']) || 
+            !isset($_POST['payment_type']) || !isset($_POST['plan_key'])) {
+            wp_send_json_error(array('message' => 'Missing required parameters'));
+        }
+        
         // Get user_id - either from POST or current user
         $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : get_current_user_id();
         
@@ -251,6 +257,16 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
         $payment_type = sanitize_text_field($_POST['payment_type']);
         $plan_key = sanitize_text_field($_POST['plan_key']);
         $is_registration = isset($_POST['is_registration']) && $_POST['is_registration'] === 'true';
+        
+        // Validate amount is positive and reasonable (max $1000)
+        if ($amount <= 0 || $amount > 1000) {
+            wp_send_json_error(array('message' => 'Invalid amount'));
+        }
+        
+        // Validate duration_days is positive
+        if ($duration_days <= 0) {
+            wp_send_json_error(array('message' => 'Invalid duration'));
+        }
         
         $secret_key = get_option('ielts_ms_stripe_secret_key', '');
         
@@ -271,7 +287,13 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
             $email = sanitize_email($_POST['email']);
         }
         
+        // For registration, ensure we have either a valid user_id or email
+        if ($is_registration && $user_id === 0 && empty($email)) {
+            wp_send_json_error(array('message' => 'User information is required'));
+        }
+        
         // Create pending payment record
+        // For registration with user_id = 0, we still create the record but it will be updated later
         $payment_id = $this->record_payment($user_id, $amount, $duration_days, null, 'pending', $payment_type);
         
         // Prepare Stripe API request for Payment Intent

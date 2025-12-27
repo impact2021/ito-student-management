@@ -16,6 +16,7 @@ jQuery(document).ready(function($) {
     // Show/hide Stripe payment section based on gateway selection
     $('input[name="payment_gateway"]').on('change', function() {
         const gateway = $(this).val();
+        // Show stripe payment section for both 'stripe' and when we're doing inline payment
         if (gateway === 'stripe' && stripe) {
             $('#stripe-payment-section').slideDown();
         } else {
@@ -551,12 +552,14 @@ jQuery(document).ready(function($) {
                     $('#complete-payment-btn').data('clientSecret', response.data.clientSecret);
                     $('#complete-payment-btn').data('paymentId', response.data.payment_id);
                 } else {
-                    alert(response.data.message || 'Failed to initialize payment');
+                    $('#payment-errors-account').removeClass('success').addClass('error')
+                        .text(response.data.message || 'Failed to initialize payment').show();
                     $('.gateway-btn').prop('disabled', false);
                 }
             },
             error: function() {
-                alert('An error occurred. Please try again.');
+                $('#payment-errors-account').removeClass('success').addClass('error')
+                    .text('An error occurred. Please try again.').show();
                 $('.gateway-btn').prop('disabled', false);
             }
         });
