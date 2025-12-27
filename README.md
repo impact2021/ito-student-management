@@ -1,52 +1,137 @@
-# ITO Student Management
+# IELTS Membership System
 
-WordPress membership and payment system for controlling access to IELTS preparation courses.
+A complete membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
 
-## Overview
+## Features
 
-This repository contains the **IELTS Membership System** - a complete WordPress plugin that manages:
-- Student memberships and access control
-- Payment processing via PayPal and Stripe
-- Custom login and registration pages
-- Account management for students
-- Admin dashboard for membership oversight
+- **Membership Management**
+  - 90-day membership ($24.95 USD)
+  - Membership extensions (1 week - $5, 1 month - $10, 3 months - $20)
+  - Automatic expiration tracking
+  - Full access to all IELTS courses when active
 
-## Contents
+- **Payment Integration**
+  - PayPal Standard integration
+  - Stripe Checkout integration
+  - Secure payment processing
+  - Payment history tracking
 
-### `/ielts-membership-system/`
-Complete WordPress plugin for membership management. See the [plugin README](ielts-membership-system/README.md) for detailed documentation.
+- **Custom Login System**
+  - Custom login/registration pages
+  - Forgot password functionality
+  - Replaces WordPress default login
+  - Link to legacy course for pre-2026 enrollees
 
-## Quick Start
+- **Account Management**
+  - View membership status and expiration
+  - Change email address
+  - Change password
+  - View payment history
+  - Purchase/extend membership
 
-1. **Installation**: Upload the `ielts-membership-system` folder to `/wp-content/plugins/` on your WordPress site
-2. **Activation**: Activate the plugin through the WordPress admin panel
-3. **Configuration**: Set up PayPal and Stripe payment gateways in Membership > Settings
-4. **Usage**: Direct students to the auto-created pages for login, registration, and account management
+## Installation
 
-## Key Features
+1. Upload the plugin folder to the `/wp-content/plugins/` directory (or install directly from GitHub by cloning this repository into the plugins directory)
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Go to Membership > Settings to configure payment gateways
+4. The plugin will automatically create required pages:
+   - Membership Login (`/membership-login/`)
+   - Membership Registration (`/membership-register/`)
+   - My Account (`/my-account/`)
 
-✅ **90-day membership** - $24.95 USD with full course access  
-✅ **Flexible extensions** - 1 week ($5), 1 month ($10), or 3 months ($20)  
-✅ **Dual payment gateways** - PayPal and Stripe integration  
-✅ **Custom login system** - Replaces WordPress default with branded pages  
-✅ **Account management** - Email/password changes, membership status  
-✅ **Legacy support** - Link for pre-2026 enrollees to access old system  
+## Configuration
 
-## Documentation
+### PayPal Setup
 
-- [Installation Guide](ielts-membership-system/INSTALLATION.md)
-- [Quick Reference](ielts-membership-system/QUICK-REFERENCE.md)
-- [Technical Summary](ielts-membership-system/TECHNICAL-SUMMARY.md)
+1. Go to **Membership > Settings**
+2. Under PayPal Settings:
+   - Enable PayPal
+   - Enter your PayPal business email
+   - Enable sandbox mode for testing (optional)
+3. Save settings
 
-## Requirements
+### Stripe Setup
 
-- WordPress 5.8 or higher
-- PHP 7.2 or higher
-- Active IELTS Course Manager plugin (for course access control)
+1. Go to **Membership > Settings**
+2. Under Stripe Settings:
+   - Enable Stripe
+   - Enter your Stripe Publishable Key
+   - Enter your Stripe Secret Key
+   - (Optional) Configure webhook for advanced features
+3. Save settings
+
+**Stripe Webhook URL:** `https://yoursite.com/wp-admin/admin-ajax.php?action=ielts_ms_stripe_webhook`
+
+### Login Settings
+
+- Enable/disable custom login page replacement
+- Default: WordPress login redirects to custom login page
+
+## Usage
+
+### Shortcodes
+
+- `[ielts_membership_login]` - Display login form
+- `[ielts_membership_register]` - Display registration form
+- `[ielts_membership_account]` - Display account page
+
+### For Users
+
+1. **Register:** Visit the registration page to create an account
+2. **Login:** Use the login page to access your account
+3. **Purchase:** From the account page, select a membership plan
+4. **Manage:** Change email/password, view membership status
+5. **Extend:** Current or expired members can extend their membership
+
+### For Administrators
+
+- **Members:** View all members and their status
+- **Payments:** Track all payment transactions
+- **Settings:** Configure payment gateways and system options
+
+## Integration with IELTS Course Manager
+
+This plugin integrates with the IELTS Course Manager plugin to control access:
+
+- Active members automatically get the "subscriber" role
+- Subscribers have access to all IELTS courses
+- Access is checked via the `ielts_cm_has_course_access` filter
+
+## Pricing Plans
+
+### New Membership
+- **90 Days:** $24.95 USD
+- Full access to all content
+
+### Extensions (for existing/expired members)
+- **1 Week:** $5.00 USD
+- **1 Month:** $10.00 USD (Recommended)
+- **3 Months:** $20.00 USD (Best Value)
+
+## Database Tables
+
+The plugin creates two custom tables:
+
+1. `wp_ielts_ms_memberships` - Stores membership records
+2. `wp_ielts_ms_payments` - Stores payment transactions
+
+## Legacy Users
+
+Users enrolled before January 1, 2026 can access the old course version via a link on the login page that redirects to `https://www.ieltstestonline.com/older-version/`
 
 ## Support
 
-For questions or issues, contact IELTStestONLINE.
+For support or questions, contact the plugin maintainer at IELTStestONLINE.
+
+## Changelog
+
+### Version 1.0.0
+- Initial release
+- PayPal and Stripe integration
+- Custom login/registration system
+- Account management
+- Membership system with extensions
+- Admin dashboard for members and payments
 
 ## License
 
