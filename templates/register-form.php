@@ -63,7 +63,7 @@ $new_membership = $pricing_options['new_90'];
                     
                     <?php if (get_option('ielts_ms_paypal_enabled', true)): ?>
                         <label class="payment-method-option">
-                            <input type="radio" name="payment_gateway" value="paypal" <?php echo !get_option('ielts_ms_stripe_enabled', true) ? 'checked' : ''; ?> required>
+                            <input type="radio" name="payment_gateway" value="paypal" <?php echo !get_option('ielts_ms_stripe_enabled', true) && get_option('ielts_ms_paypal_enabled', true) ? 'checked' : ''; ?> required>
                             <span><?php _e('PayPal', 'ielts-membership-system'); ?></span>
                         </label>
                     <?php endif; ?>

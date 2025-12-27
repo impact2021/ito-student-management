@@ -228,7 +228,7 @@ class IELTS_MS_Login_Manager {
             'registration' => 'cancelled',
             'payment_status' => 'cancelled',
             'gateway' => 'stripe'
-        ), wp_registration_url());
+        ), get_permalink(get_page_by_path('membership-register')));
         
         // Prepare Stripe API request
         $pricing_options = IELTS_MS_Payment_Gateway::get_pricing_options();
@@ -325,7 +325,7 @@ class IELTS_MS_Login_Manager {
             'registration' => 'cancelled',
             'payment_status' => 'cancelled',
             'gateway' => 'paypal'
-        ), wp_registration_url());
+        ), get_permalink(get_page_by_path('membership-register')));
         
         $notify_url = admin_url('admin-ajax.php?action=ielts_ms_paypal_ipn');
         

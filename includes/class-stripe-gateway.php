@@ -197,14 +197,14 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
                 $membership = new IELTS_MS_Membership();
                 $membership->create_membership($user_id, $duration_days, $payment_id);
                 
-                // If this was a registration, complete the registration
-                if ($is_registration) {
-                    delete_user_meta($user_id, 'ielts_ms_registration_pending');
-                    delete_user_meta($user_id, 'ielts_ms_registration_timestamp');
-                    
-                    // Send welcome email
-                    wp_new_user_notification($user_id, null, 'user');
-                }
+                    // If this was a registration, complete the registration
+                    if ($is_registration) {
+                        delete_user_meta($user_id, 'ielts_ms_registration_pending');
+                        delete_user_meta($user_id, 'ielts_ms_registration_timestamp');
+                        
+                        // Send welcome email
+                        wp_new_user_notification($user_id, null, 'user');
+                    }
             }
         }
         
