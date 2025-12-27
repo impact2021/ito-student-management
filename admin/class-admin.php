@@ -168,7 +168,8 @@ class IELTS_MS_Admin {
                                 <strong>Where to find:</strong> <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a> → Developers → API Keys → "Publishable key"<br>
                                 <strong>Test mode:</strong> Starts with <code>pk_test_</code> (e.g., <code>pk_test_51A1B2C3...</code>)<br>
                                 <strong>Live mode:</strong> Starts with <code>pk_live_</code> (e.g., <code>pk_live_51A1B2C3...</code>)<br>
-                                <em>This key is safe to use in your website's client-side code.</em>
+                                <strong>Security:</strong> Publishable keys are <em>designed by Stripe to be safely exposed in client-side code</em>. Unlike secret keys, they cannot access sensitive account data or move money. They are only used to create secure tokens for payment information.<br>
+                                <strong>Current implementation:</strong> This plugin uses server-side Stripe Checkout sessions, so the publishable key is stored securely on the server and not exposed to the browser.
                             </p>
                         </td>
                     </tr>
