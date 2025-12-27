@@ -79,10 +79,12 @@ ielts-membership-system/
 - Automatic membership activation
 - Transaction tracking
 
-**Stripe Checkout:**
-- Hosted checkout pages
+**Stripe Payment Elements:**
+- Inline payment directly on the site (no redirect)
+- Payment Intent API for secure processing
 - Webhook support
 - Test mode with test cards
+- Embedded card input with real-time validation
 - Secure payment processing
 
 ### 3. User Authentication
@@ -206,7 +208,9 @@ Extensions can be purchased:
 
 ### Payments
 - `ielts_ms_process_payment` - Initiate PayPal
-- `ielts_ms_create_stripe_session` - Create Stripe checkout
+- `ielts_ms_create_stripe_session` - Create Stripe checkout (legacy)
+- `ielts_ms_create_payment_intent` - Create Payment Intent for inline payment
+- `ielts_ms_confirm_payment` - Confirm completed payment
 - `ielts_ms_paypal_ipn` - PayPal callback
 - `ielts_ms_stripe_webhook` - Stripe webhook
 
