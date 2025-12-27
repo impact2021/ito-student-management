@@ -163,6 +163,6 @@
 
 ---
 
-**Version**: 1.1  
+**Version**: 1.1.0  
 **Status**: Production Ready ✅  
 **Last Updated**: December 2024
