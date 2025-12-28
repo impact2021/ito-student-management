@@ -131,14 +131,14 @@ function ielts_ms_protect_content() {
         $is_protected_content = true;
     }
     
-    // Also check by slug patterns (e.g., URLs containing 'exercise', 'sublesson', or 'lesson-page')
-    if (strpos($post_slug, 'exercise') !== false || strpos($post_slug, 'sublesson') !== false || strpos($post_slug, 'lesson-page') !== false) {
+    // Also check by slug patterns (e.g., URLs containing 'exercise', 'sublesson', 'lesson-page', or 'ielts-lesson-page')
+    if (strpos($post_slug, 'exercise') !== false || strpos($post_slug, 'sublesson') !== false || strpos($post_slug, 'lesson-page') !== false || strpos($post_slug, 'ielts-lesson-page') !== false) {
         $is_protected_content = true;
     }
     
-    // Check current URL path for exercise/sublesson/lesson-page patterns
+    // Check current URL path for exercise/sublesson/lesson-page/ielts-lesson-page patterns
     $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
-    if (strpos($current_url, '/exercise') !== false || strpos($current_url, '/sublesson') !== false || strpos($current_url, '/lesson-page') !== false) {
+    if (strpos($current_url, '/exercise') !== false || strpos($current_url, '/sublesson') !== false || strpos($current_url, '/lesson-page') !== false || strpos($current_url, '/ielts-lesson-page') !== false) {
         $is_protected_content = true;
     }
     
