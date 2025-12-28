@@ -137,6 +137,10 @@ For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
 
+### Version 3.4
+- Updated plugin to version 3.4
+- Updated minimum WordPress requirement to 6.0
+
 ### Version 3.0.0
 - Updated plugin to version 3.0.0
 

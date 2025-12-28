@@ -3,12 +3,12 @@
  * Plugin Name: IELTS Membership System
  * Plugin URI: https://www.ieltstestonline.com/
  * Description: Membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
- * Version: 3.3
+ * Version: 3.4
  * Author: IELTStestONLINE
  * Author URI: https://www.ieltstestonline.com/
  * Text Domain: ielts-membership-system
  * Domain Path: /languages
- * Requires at least: 5.8
+ * Requires at least: 6.0
  * Requires PHP: 7.2
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IELTS_MS_VERSION', '3.3');
+define('IELTS_MS_VERSION', '3.4');
 define('IELTS_MS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
