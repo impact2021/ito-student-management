@@ -106,23 +106,34 @@ jQuery(document).ready(function($) {
                 return;
             }
             
-            // Confirm the payment with Stripe
-            stripe.confirmPayment({
-                elements: elements,
-                confirmParams: {
-                    return_url: window.location.origin + window.location.pathname
-                },
-                redirect: 'if_required'
-            }).then(function(result) {
-                if (result.error) {
-                    // Show error to customer
-                    $('#payment-errors').removeClass('success').addClass('error').text(result.error.message).show();
-                    $message.removeClass('success').addClass('error').text('Payment failed: ' + result.error.message).show();
+            // Submit the elements first (required by Stripe)
+            elements.submit().then(function(submitResult) {
+                if (submitResult.error) {
+                    // Show validation error
+                    $('#payment-errors').removeClass('success').addClass('error').text(submitResult.error.message).show();
+                    $message.removeClass('success').addClass('error').text('Payment validation failed: ' + submitResult.error.message).show();
                     $button.removeClass('loading').prop('disabled', false);
-                } else {
-                    // Payment succeeded
-                    confirmPaymentOnServer(result.paymentIntent.id, paymentId, $button, $message);
+                    return;
                 }
+                
+                // Confirm the payment with Stripe
+                stripe.confirmPayment({
+                    elements: elements,
+                    confirmParams: {
+                        return_url: window.location.origin + window.location.pathname
+                    },
+                    redirect: 'if_required'
+                }).then(function(result) {
+                    if (result.error) {
+                        // Show error to customer
+                        $('#payment-errors').removeClass('success').addClass('error').text(result.error.message).show();
+                        $message.removeClass('success').addClass('error').text('Payment failed: ' + result.error.message).show();
+                        $button.removeClass('loading').prop('disabled', false);
+                    } else {
+                        // Payment succeeded
+                        confirmPaymentOnServer(result.paymentIntent.id, paymentId, $button, $message);
+                    }
+                });
             });
             return;
         }
@@ -616,44 +627,54 @@ jQuery(document).ready(function($) {
         $button.addClass('loading').prop('disabled', true);
         $('#payment-errors-account').hide();
         
-        // Confirm the payment with Stripe
-        stripe.confirmPayment({
-            elements: elements,
-            confirmParams: {
-                return_url: window.location.origin + window.location.pathname
-            },
-            redirect: 'if_required'
-        }).then(function(result) {
-            if (result.error) {
-                // Show error to customer
-                $('#payment-errors-account').removeClass('success').addClass('error').text(result.error.message).show();
+        // Submit the elements first (required by Stripe)
+        elements.submit().then(function(submitResult) {
+            if (submitResult.error) {
+                // Show validation error
+                $('#payment-errors-account').removeClass('success').addClass('error').text(submitResult.error.message).show();
                 $button.removeClass('loading').prop('disabled', false);
-            } else {
-                // Payment succeeded - confirm on server
-                $.ajax({
-                    url: ieltsMS.ajaxUrl,
-                    type: 'POST',
-                    data: {
-                        action: 'ielts_ms_confirm_payment',
-                        nonce: ieltsMS.nonce,
-                        payment_intent_id: result.paymentIntent.id,
-                        payment_id: paymentId
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            // Redirect to success page
-                            window.location.href = response.data.redirect + '?payment_status=success';
-                        } else {
-                            $('#payment-errors-account').removeClass('success').addClass('error').text(response.data.message).show();
+                return;
+            }
+            
+            // Confirm the payment with Stripe
+            stripe.confirmPayment({
+                elements: elements,
+                confirmParams: {
+                    return_url: window.location.origin + window.location.pathname
+                },
+                redirect: 'if_required'
+            }).then(function(result) {
+                if (result.error) {
+                    // Show error to customer
+                    $('#payment-errors-account').removeClass('success').addClass('error').text(result.error.message).show();
+                    $button.removeClass('loading').prop('disabled', false);
+                } else {
+                    // Payment succeeded - confirm on server
+                    $.ajax({
+                        url: ieltsMS.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'ielts_ms_confirm_payment',
+                            nonce: ieltsMS.nonce,
+                            payment_intent_id: result.paymentIntent.id,
+                            payment_id: paymentId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Redirect to success page
+                                window.location.href = response.data.redirect + '?payment_status=success';
+                            } else {
+                                $('#payment-errors-account').removeClass('success').addClass('error').text(response.data.message).show();
+                                $button.removeClass('loading').prop('disabled', false);
+                            }
+                        },
+                        error: function() {
+                            $('#payment-errors-account').removeClass('success').addClass('error').text('An error occurred. Please try again.').show();
                             $button.removeClass('loading').prop('disabled', false);
                         }
-                    },
-                    error: function() {
-                        $('#payment-errors-account').removeClass('success').addClass('error').text('An error occurred. Please try again.').show();
-                        $button.removeClass('loading').prop('disabled', false);
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
     });
     
