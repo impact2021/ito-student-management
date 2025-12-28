@@ -3,7 +3,7 @@
 ## Problem Reported
 
 **User Complaint:**
-> "What the fuck??? Now the area to enter the credit card details are gone - just a blank input field I can't even click into."
+> "The area to enter the credit card details is gone - just a blank input field I can't even click into."
 
 **Additional Question:**
 > "And the Link element has been removed?"

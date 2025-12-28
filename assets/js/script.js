@@ -42,6 +42,8 @@ jQuery(document).ready(function($) {
         const membershipAmount = $('input[name="membership_amount"]').val();
         if (!membershipAmount || parseFloat(membershipAmount) <= 0) {
             console.error('Invalid membership amount for Stripe initialization');
+            // Show user-facing error
+            $('#payment-element').html('<div style="padding: 10px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">Unable to initialize payment system. Please refresh the page and try again.</div>');
             return;
         }
         
@@ -66,6 +68,8 @@ jQuery(document).ready(function($) {
             registrationStripeInitialized = true;
         } catch (error) {
             console.error('Failed to initialize Stripe Elements:', error);
+            // Show user-facing error
+            $('#payment-element').html('<div style="padding: 10px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">Unable to initialize payment system. Please refresh the page and try again.</div>');
         }
     }
     
