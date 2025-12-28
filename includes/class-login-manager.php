@@ -396,6 +396,10 @@ class IELTS_MS_Login_Manager {
             if (is_array($value)) {
                 $query[] = $this->build_stripe_query($value, $formatted_key);
             } else {
+                // Convert boolean values to strings for Stripe API
+                if (is_bool($value)) {
+                    $value = $value ? 'true' : 'false';
+                }
                 $query[] = urlencode($formatted_key) . '=' . urlencode($value);
             }
         }

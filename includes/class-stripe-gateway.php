@@ -230,6 +230,10 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
             if (is_array($value)) {
                 $query[] = $this->build_stripe_query($value, $formatted_key);
             } else {
+                // Convert boolean values to strings for Stripe API
+                if (is_bool($value)) {
+                    $value = $value ? 'true' : 'false';
+                }
                 $query[] = urlencode($formatted_key) . '=' . urlencode($value);
             }
         }
@@ -307,7 +311,7 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
         $stripe_data = array(
             'amount' => intval($amount * 100), // Convert to cents
             'currency' => 'usd',
-            'automatic_payment_methods' => array('enabled' => 'true'),
+            'payment_method_types' => array('card'),
             'metadata' => array(
                 'user_id' => $user_id,
                 'duration_days' => $duration_days,
