@@ -64,7 +64,7 @@ function ielts_ms_init() {
     // Redirect logged-in users to custom homepage
     add_action('template_redirect', 'ielts_ms_redirect_logged_in_homepage');
     
-    // Protect exercise and sublesson content
+    // Protect exercise, sublesson, and lesson-page content
     add_action('template_redirect', 'ielts_ms_protect_content');
 }
 add_action('plugins_loaded', 'ielts_ms_init');
@@ -97,7 +97,7 @@ function ielts_ms_redirect_logged_in_homepage() {
 }
 
 /**
- * Protect exercise and sublesson content
+ * Protect exercise, sublesson, and lesson-page content
  */
 function ielts_ms_protect_content() {
     // Don't protect admin area
@@ -121,24 +121,24 @@ function ielts_ms_protect_content() {
     $post_type = $queried_object->post_type;
     $post_slug = isset($queried_object->post_name) ? $queried_object->post_name : '';
     
-    // Check if this is an exercise or sublesson
-    // This assumes custom post types 'exercise' and 'sublesson' exist
+    // Check if this is an exercise, sublesson, or lesson-page
+    // This assumes custom post types 'exercise', 'sublesson', 'lesson-page', or 'ielts-lesson-page' exist
     // Or we can check by slug patterns
     $is_protected_content = false;
     
     // Check if it's a custom post type for exercises or sublessons
-    if (in_array($post_type, array('exercise', 'sublesson'))) {
+    if (in_array($post_type, array('exercise', 'sublesson', 'lesson-page', 'ielts-lesson-page'))) {
         $is_protected_content = true;
     }
     
-    // Also check by slug patterns (e.g., URLs containing 'exercise' or 'sublesson')
-    if (strpos($post_slug, 'exercise') !== false || strpos($post_slug, 'sublesson') !== false) {
+    // Also check by slug patterns (e.g., URLs containing 'exercise', 'sublesson', or 'lesson-page')
+    if (strpos($post_slug, 'exercise') !== false || strpos($post_slug, 'sublesson') !== false || strpos($post_slug, 'lesson-page') !== false) {
         $is_protected_content = true;
     }
     
-    // Check current URL path for exercise/sublesson patterns
+    // Check current URL path for exercise/sublesson/lesson-page patterns
     $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
-    if (strpos($current_url, '/exercise') !== false || strpos($current_url, '/sublesson') !== false) {
+    if (strpos($current_url, '/exercise') !== false || strpos($current_url, '/sublesson') !== false || strpos($current_url, '/lesson-page') !== false) {
         $is_protected_content = true;
     }
     
