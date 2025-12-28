@@ -128,7 +128,11 @@ function ielts_ms_protect_content() {
     
     // Protected content patterns
     $protected_post_types = array('exercise', 'sublesson', 'lesson-page', 'ielts-lesson-page');
-    $protected_url_patterns = array('/exercise/', '/sublesson/', '/lesson-page/', '/ielts-lesson-page/');
+    
+    // Derive URL patterns from post types (add leading and trailing slashes)
+    $protected_url_patterns = array_map(function($type) {
+        return '/' . $type . '/';
+    }, $protected_post_types);
     
     // Check if it's a custom post type for exercises or sublessons
     if (in_array($post_type, $protected_post_types)) {
