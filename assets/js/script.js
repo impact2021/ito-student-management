@@ -27,30 +27,19 @@ jQuery(document).ready(function($) {
     }
     
     // Show/hide Stripe payment section based on gateway selection
-    // Note: For registration form, don't show the section yet - it will be shown after account creation
     $('input[name="payment_gateway"]').on('change', function() {
         const gateway = $(this).val();
-        const $form = $(this).closest('form');
-        const isRegistrationForm = $form.attr('id') === 'ielts-ms-register-form';
         
-        // Only auto-show payment section for non-registration forms (account page)
-        // Registration form will show it after account creation
-        if (gateway === 'stripe' && stripe && !isRegistrationForm) {
+        if (gateway === 'stripe' && stripe) {
             $('#stripe-payment-section').slideDown();
-        } else if (!isRegistrationForm) {
+        } else {
             $('#stripe-payment-section').slideUp();
         }
     });
     
     // Initialize Stripe payment section on page load if Stripe is selected
-    // But NOT for registration form - it needs to create account first
     if ($('input[name="payment_gateway"]:checked').val() === 'stripe' && stripe) {
-        const $checkedRadio = $('input[name="payment_gateway"]:checked');
-        const isRegistrationForm = $checkedRadio.closest('form').attr('id') === 'ielts-ms-register-form';
-        
-        if (!isRegistrationForm) {
-            $('#stripe-payment-section').show();
-        }
+        $('#stripe-payment-section').show();
     }
     
     // Login form
