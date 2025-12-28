@@ -137,7 +137,7 @@ function ielts_ms_protect_content() {
     }
     
     // Check current URL path for exercise/sublesson patterns
-    $current_url = $_SERVER['REQUEST_URI'];
+    $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
     if (strpos($current_url, '/exercise') !== false || strpos($current_url, '/sublesson') !== false) {
         $is_protected_content = true;
     }
@@ -160,7 +160,7 @@ function ielts_ms_protect_content() {
             $redirect_url = get_permalink($redirect_page_id);
             
             // Add a return URL parameter so user can be redirected back after login
-            $return_url = urlencode($_SERVER['REQUEST_URI']);
+            $return_url = urlencode(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])));
             $redirect_url = add_query_arg('redirect_to', $return_url, $redirect_url);
             
             wp_redirect($redirect_url);

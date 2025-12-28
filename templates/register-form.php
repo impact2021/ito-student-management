@@ -92,10 +92,10 @@ $new_membership = $pricing_options['new_90'];
                 <div class="ielts-ms-form-group">
                     <label><?php _e('Card Details', 'ielts-membership-system'); ?></label>
                     <p class="description" style="margin-bottom: 10px;">
-                        <?php _e('Payment fields will be activated when you submit the form above.', 'ielts-membership-system'); ?>
+                        <?php _e('Payment fields will be ready for use when you submit your registration information.', 'ielts-membership-system'); ?>
                     </p>
                     <div id="payment-element" class="stripe-payment-element">
-                        <!-- Stripe Elements will be inserted here after account creation -->
+                        <!-- Stripe Elements will be inserted here -->
                     </div>
                     <div id="payment-errors" class="ielts-ms-message" style="display: none;"></div>
                 </div>
