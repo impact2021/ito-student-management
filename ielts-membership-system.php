@@ -126,20 +126,35 @@ function ielts_ms_protect_content() {
     // Or we can check by slug patterns
     $is_protected_content = false;
     
+    // Protected content patterns
+    $protected_post_types = array('exercise', 'sublesson', 'lesson-page', 'ielts-lesson-page');
+    $protected_patterns = array('exercise', 'sublesson', 'lesson-page', 'ielts-lesson-page');
+    $protected_url_patterns = array('/exercise', '/sublesson', '/lesson-page', '/ielts-lesson-page');
+    
     // Check if it's a custom post type for exercises or sublessons
-    if (in_array($post_type, array('exercise', 'sublesson', 'lesson-page', 'ielts-lesson-page'))) {
+    if (in_array($post_type, $protected_post_types)) {
         $is_protected_content = true;
     }
     
-    // Also check by slug patterns (e.g., URLs containing 'exercise', 'sublesson', 'lesson-page', or 'ielts-lesson-page')
-    if (strpos($post_slug, 'exercise') !== false || strpos($post_slug, 'sublesson') !== false || strpos($post_slug, 'lesson-page') !== false || strpos($post_slug, 'ielts-lesson-page') !== false) {
-        $is_protected_content = true;
+    // Also check by slug patterns
+    if (!$is_protected_content) {
+        foreach ($protected_patterns as $pattern) {
+            if (strpos($post_slug, $pattern) !== false) {
+                $is_protected_content = true;
+                break;
+            }
+        }
     }
     
-    // Check current URL path for exercise/sublesson/lesson-page/ielts-lesson-page patterns
-    $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
-    if (strpos($current_url, '/exercise') !== false || strpos($current_url, '/sublesson') !== false || strpos($current_url, '/lesson-page') !== false || strpos($current_url, '/ielts-lesson-page') !== false) {
-        $is_protected_content = true;
+    // Check current URL path for protected patterns
+    if (!$is_protected_content) {
+        $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
+        foreach ($protected_url_patterns as $pattern) {
+            if (strpos($current_url, $pattern) !== false) {
+                $is_protected_content = true;
+                break;
+            }
+        }
     }
     
     // If not protected content, allow access
