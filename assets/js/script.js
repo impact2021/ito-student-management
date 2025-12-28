@@ -53,20 +53,30 @@ jQuery(document).ready(function($) {
     
     // Function to initialize Stripe Elements for registration form
     function initializeRegistrationStripeElements() {
-        if (!stripe || registrationStripeInitialized) {
+        // Already initialized, skip
+        if (registrationStripeInitialized) {
+            return;
+        }
+        
+        // Stripe not available - this is a serious error
+        if (!stripe) {
+            console.error('Stripe is not initialized. Check that Stripe.js is loaded and publishable key is set.');
             return;
         }
         
         // Validate required DOM elements exist
-        if (!$('#payment-element').length || !$('input[name="membership_amount"]').length) {
-            console.error('Required elements for Stripe initialization not found');
+        const hasPaymentElement = $('#payment-element').length > 0;
+        const hasAmountInput = $('input[name="membership_amount"]').length > 0;
+        
+        if (!hasPaymentElement || !hasAmountInput) {
+            console.error('Required elements missing: payment-element=' + hasPaymentElement + ', membership_amount=' + hasAmountInput);
             return;
         }
         
         // Validate amount is valid
         const amountValue = parseFloat($('input[name="membership_amount"]').val());
         if (isNaN(amountValue) || amountValue <= 0) {
-            console.error('Invalid membership amount for Stripe initialization');
+            console.error('Invalid membership amount for Stripe initialization: ' + amountValue);
             return;
         }
         
@@ -78,9 +88,13 @@ jQuery(document).ready(function($) {
             }
         };
         
+        // Convert USD amount to cents (Stripe expects smallest currency unit)
+        const CENTS_PER_DOLLAR = 100;
+        const amountInCents = Math.round(amountValue * CENTS_PER_DOLLAR);
+        
         elements = stripe.elements({
             mode: 'payment',
-            amount: amountValue * 100, // Convert to cents
+            amount: amountInCents,
             currency: 'usd',
             appearance: appearance
         });
