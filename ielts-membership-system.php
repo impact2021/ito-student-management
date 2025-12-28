@@ -3,7 +3,7 @@
  * Plugin Name: IELTS Membership System
  * Plugin URI: https://www.ieltstestonline.com/
  * Description: Membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
- * Version: 3.2
+ * Version: 3.3
  * Author: IELTStestONLINE
  * Author URI: https://www.ieltstestonline.com/
  * Text Domain: ielts-membership-system
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IELTS_MS_VERSION', '3.2');
+define('IELTS_MS_VERSION', '3.3');
 define('IELTS_MS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
