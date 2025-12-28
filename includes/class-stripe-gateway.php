@@ -311,7 +311,7 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
         $stripe_data = array(
             'amount' => intval($amount * 100), // Convert to cents
             'currency' => 'usd',
-            'payment_method_types' => array('card'),
+            'automatic_payment_methods' => array('enabled' => true),
             'metadata' => array(
                 'user_id' => $user_id,
                 'duration_days' => $duration_days,
