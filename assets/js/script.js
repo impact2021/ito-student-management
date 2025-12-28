@@ -23,6 +23,10 @@ jQuery(document).ready(function($) {
     let paymentElement = null;
     let registrationStripeInitialized = false;
     
+    // Separate variables for account page to avoid conflicts
+    let accountElements = null;
+    let accountPaymentElement = null;
+    
     if (typeof Stripe !== 'undefined' && ieltsMS.stripeEnabled && ieltsMS.stripePublicKey) {
         stripe = Stripe(ieltsMS.stripePublicKey);
     }
@@ -591,9 +595,9 @@ jQuery(document).ready(function($) {
                         }
                     };
                     
-                    elements = stripe.elements(options);
-                    paymentElement = elements.create('payment');
-                    paymentElement.mount('#payment-element-account');
+                    accountElements = stripe.elements(options);
+                    accountPaymentElement = accountElements.create('payment');
+                    accountPaymentElement.mount('#payment-element-account');
                     
                     // Show the payment section
                     $('#stripe-payment-section-account').slideDown();
@@ -627,7 +631,7 @@ jQuery(document).ready(function($) {
         $('#payment-errors-account').hide();
         
         // Submit the elements first (required by Stripe)
-        elements.submit().then(function(submitResult) {
+        accountElements.submit().then(function(submitResult) {
             if (submitResult.error) {
                 // Show validation error
                 $('#payment-errors-account').removeClass('success').addClass('error').text(submitResult.error.message).show();
@@ -637,7 +641,7 @@ jQuery(document).ready(function($) {
             
             // Confirm the payment with Stripe
             stripe.confirmPayment({
-                elements: elements,
+                elements: accountElements,
                 confirmParams: {
                     return_url: window.location.origin + window.location.pathname
                 },
