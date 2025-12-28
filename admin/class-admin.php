@@ -85,6 +85,7 @@ class IELTS_MS_Admin {
         register_setting('ielts_ms_settings', 'ielts_ms_login_page_id');
         register_setting('ielts_ms_settings', 'ielts_ms_account_page_id');
         register_setting('ielts_ms_settings', 'ielts_ms_logged_in_homepage_id');
+        register_setting('ielts_ms_settings', 'ielts_ms_protected_content_redirect_page_id');
         
         // Pricing settings
         register_setting('ielts_ms_settings', 'ielts_ms_price_new_90');
@@ -120,6 +121,17 @@ class IELTS_MS_Admin {
                 }
             } else {
                 update_option('ielts_ms_logged_in_homepage_id', 0);
+            }
+            
+            // Validate and save protected content redirect page
+            $redirect_page_id = isset($_POST['protected_content_redirect_page_id']) ? intval($_POST['protected_content_redirect_page_id']) : 0;
+            if ($redirect_page_id > 0) {
+                $page_status = get_post_status($redirect_page_id);
+                if ($page_status === 'publish') {
+                    update_option('ielts_ms_protected_content_redirect_page_id', $redirect_page_id);
+                }
+            } else {
+                update_option('ielts_ms_protected_content_redirect_page_id', 0);
             }
             
             // Update pricing with validation
@@ -296,6 +308,21 @@ class IELTS_MS_Admin {
                             ));
                             ?>
                             <p class="description">Select a page to redirect logged-in users to when they visit the homepage</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Protected Content Redirect Page</th>
+                        <td>
+                            <?php
+                            $protected_redirect_page_id = get_option('ielts_ms_protected_content_redirect_page_id', 0);
+                            wp_dropdown_pages(array(
+                                'name' => 'protected_content_redirect_page_id',
+                                'selected' => $protected_redirect_page_id,
+                                'show_option_none' => 'Use Login Page (Default)',
+                                'option_none_value' => 0
+                            ));
+                            ?>
+                            <p class="description">Select a page to redirect users to when they try to access exercises or sublessons without login/membership. This should be a combined login/registration page. Leave empty to use the default login page.</p>
                         </td>
                     </tr>
                 </table>

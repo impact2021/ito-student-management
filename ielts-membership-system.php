@@ -3,7 +3,7 @@
  * Plugin Name: IELTS Membership System
  * Plugin URI: https://www.ieltstestonline.com/
  * Description: Membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
- * Version: 3.0.0
+ * Version: 3.1
  * Author: IELTStestONLINE
  * Author URI: https://www.ieltstestonline.com/
  * Text Domain: ielts-membership-system
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IELTS_MS_VERSION', '3.0.0');
+define('IELTS_MS_VERSION', '3.1');
 define('IELTS_MS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
@@ -63,6 +63,9 @@ function ielts_ms_init() {
     
     // Redirect logged-in users to custom homepage
     add_action('template_redirect', 'ielts_ms_redirect_logged_in_homepage');
+    
+    // Protect exercise and sublesson content
+    add_action('template_redirect', 'ielts_ms_protect_content');
 }
 add_action('plugins_loaded', 'ielts_ms_init');
 
@@ -87,6 +90,96 @@ function ielts_ms_redirect_logged_in_homepage() {
     if ($logged_in_homepage_id && $logged_in_homepage_id != $current_homepage_id) {
         $redirect_url = get_permalink($logged_in_homepage_id);
         if ($redirect_url) {
+            wp_redirect($redirect_url);
+            exit;
+        }
+    }
+}
+
+/**
+ * Protect exercise and sublesson content
+ */
+function ielts_ms_protect_content() {
+    // Don't protect admin area
+    if (is_admin()) {
+        return;
+    }
+    
+    // Don't redirect admins - they should have full access
+    if (current_user_can('manage_options')) {
+        return;
+    }
+    
+    // Get the current post/page
+    $queried_object = get_queried_object();
+    
+    // Only check for posts/pages
+    if (!$queried_object || !isset($queried_object->post_type)) {
+        return;
+    }
+    
+    $post_type = $queried_object->post_type;
+    $post_slug = isset($queried_object->post_name) ? $queried_object->post_name : '';
+    
+    // Check if this is an exercise or sublesson
+    // This assumes custom post types 'exercise' and 'sublesson' exist
+    // Or we can check by slug patterns
+    $is_protected_content = false;
+    
+    // Check if it's a custom post type for exercises or sublessons
+    if (in_array($post_type, array('exercise', 'sublesson'))) {
+        $is_protected_content = true;
+    }
+    
+    // Also check by slug patterns (e.g., URLs containing 'exercise' or 'sublesson')
+    if (strpos($post_slug, 'exercise') !== false || strpos($post_slug, 'sublesson') !== false) {
+        $is_protected_content = true;
+    }
+    
+    // Check current URL path for exercise/sublesson patterns
+    $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
+    if (strpos($current_url, '/exercise') !== false || strpos($current_url, '/sublesson') !== false) {
+        $is_protected_content = true;
+    }
+    
+    // If not protected content, allow access
+    if (!$is_protected_content) {
+        return;
+    }
+    
+    // If user is not logged in, redirect to login/registration page
+    if (!is_user_logged_in()) {
+        $redirect_page_id = get_option('ielts_ms_protected_content_redirect_page_id', 0);
+        
+        // Fallback to login page if no redirect page is set
+        if (!$redirect_page_id) {
+            $redirect_page_id = get_option('ielts_ms_login_page_id');
+        }
+        
+        if ($redirect_page_id) {
+            $redirect_url = get_permalink($redirect_page_id);
+            
+            // Add a return URL parameter so user can be redirected back after login
+            $return_url = urlencode(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])));
+            $redirect_url = add_query_arg('redirect_to', $return_url, $redirect_url);
+            
+            wp_redirect($redirect_url);
+            exit;
+        }
+    }
+    
+    // If user is logged in but doesn't have active membership, also redirect
+    $membership = new IELTS_MS_Membership();
+    if (!$membership->has_active_membership(get_current_user_id())) {
+        $redirect_page_id = get_option('ielts_ms_protected_content_redirect_page_id', 0);
+        
+        // Fallback to login page if no redirect page is set
+        if (!$redirect_page_id) {
+            $redirect_page_id = get_option('ielts_ms_login_page_id');
+        }
+        
+        if ($redirect_page_id) {
+            $redirect_url = get_permalink($redirect_page_id);
             wp_redirect($redirect_url);
             exit;
         }
