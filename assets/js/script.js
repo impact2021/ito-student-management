@@ -21,6 +21,7 @@ jQuery(document).ready(function($) {
     let stripe = null;
     let elements = null;
     let paymentElement = null;
+    let registrationStripeInitialized = false;
     
     if (typeof Stripe !== 'undefined' && ieltsMS.stripeEnabled && ieltsMS.stripePublicKey) {
         stripe = Stripe(ieltsMS.stripePublicKey);
@@ -32,6 +33,10 @@ jQuery(document).ready(function($) {
         
         if (gateway === 'stripe' && stripe) {
             $('#stripe-payment-section').slideDown();
+            // Initialize Stripe Elements for registration form if not already done
+            if ($('#ielts-ms-register-form').length > 0 && !registrationStripeInitialized) {
+                initializeRegistrationStripeElements();
+            }
         } else {
             $('#stripe-payment-section').slideUp();
         }
@@ -40,6 +45,63 @@ jQuery(document).ready(function($) {
     // Initialize Stripe payment section on page load if Stripe is selected
     if ($('input[name="payment_gateway"]:checked').val() === 'stripe' && stripe) {
         $('#stripe-payment-section').show();
+        // Initialize Stripe Elements for registration form on page load
+        if ($('#ielts-ms-register-form').length > 0 && !registrationStripeInitialized) {
+            initializeRegistrationStripeElements();
+        }
+    }
+    
+    // Function to initialize Stripe Elements for registration form
+    function initializeRegistrationStripeElements() {
+        // Already initialized, skip
+        if (registrationStripeInitialized) {
+            return;
+        }
+        
+        // Stripe not available - this is a serious error
+        if (!stripe) {
+            console.error('Stripe is not initialized. Check that Stripe.js is loaded and publishable key is set.');
+            return;
+        }
+        
+        // Validate required DOM elements exist
+        const hasPaymentElement = $('#payment-element').length > 0;
+        const hasAmountInput = $('input[name="membership_amount"]').length > 0;
+        
+        if (!hasPaymentElement || !hasAmountInput) {
+            console.error('Required elements missing: payment-element=' + hasPaymentElement + ', membership_amount=' + hasAmountInput);
+            return;
+        }
+        
+        // Validate amount is valid
+        const amountValue = parseFloat($('input[name="membership_amount"]').val());
+        if (isNaN(amountValue) || amountValue <= 0) {
+            console.error('Invalid membership amount for Stripe initialization: ' + amountValue);
+            return;
+        }
+        
+        // Initialize Stripe Elements with payment mode
+        const appearance = {
+            theme: 'stripe',
+            variables: {
+                colorPrimary: '#0073aa'
+            }
+        };
+        
+        // Convert USD amount to cents (Stripe expects smallest currency unit)
+        const CENTS_PER_DOLLAR = 100;
+        const amountInCents = Math.round(amountValue * CENTS_PER_DOLLAR);
+        
+        elements = stripe.elements({
+            mode: 'payment',
+            amount: amountInCents,
+            currency: 'usd',
+            appearance: appearance
+        });
+        
+        paymentElement = elements.create('payment');
+        paymentElement.mount('#payment-element');
+        registrationStripeInitialized = true;
     }
     
     // Login form
@@ -89,36 +151,6 @@ jQuery(document).ready(function($) {
         const $button = $form.find('button[type="submit"]');
         const $message = $form.find('.ielts-ms-message');
         
-        // Check if Stripe payment is already initialized
-        if ($form.data('stripeInitialized')) {
-            // Handle Stripe payment confirmation
-            $button.addClass('loading').prop('disabled', true);
-            $message.hide();
-            $('#payment-errors').hide();
-            
-            const clientSecret = $form.data('clientSecret');
-            const paymentId = $form.data('paymentId');
-            
-            // Confirm the payment with Stripe
-            stripe.confirmPayment({
-                elements: elements,
-                confirmParams: {
-                    return_url: window.location.origin + window.location.pathname
-                },
-                redirect: 'if_required'
-            }).then(function(result) {
-                if (result.error) {
-                    // Show error to customer
-                    $('#payment-errors').removeClass('success').addClass('error').text(result.error.message).show();
-                    $button.removeClass('loading').prop('disabled', false);
-                } else {
-                    // Payment succeeded
-                    confirmPaymentOnServer(result.paymentIntent.id, paymentId, $button, $message);
-                }
-            });
-            return;
-        }
-        
         // Initial form submission
         $button.addClass('loading').prop('disabled', true);
         $message.hide();
@@ -152,7 +184,7 @@ jQuery(document).ready(function($) {
         }
         
         // Handle Stripe inline payment
-        if (gateway === 'stripe' && stripe) {
+        if (gateway === 'stripe' && stripe && registrationStripeInitialized) {
             handleStripeInlineRegistration($form, $button, $message);
         } else {
             // Handle PayPal or legacy Stripe redirect
@@ -182,8 +214,8 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success && response.data.user_id) {
-                    // User created successfully, now create payment intent
-                    createPaymentIntentForRegistration(response.data.user_id, $form, $button, $message);
+                    // User created successfully, now create payment intent and process payment
+                    createPaymentIntentAndProcessRegistration(response.data.user_id, $form, $button, $message);
                 } else {
                     $message.removeClass('success').addClass('error').text(response.data.message).show();
                     $button.removeClass('loading').prop('disabled', false);
@@ -196,8 +228,8 @@ jQuery(document).ready(function($) {
         });
     }
     
-    // Create Payment Intent for registration
-    function createPaymentIntentForRegistration(userId, $form, $button, $message) {
+    // Create Payment Intent and immediately process payment for registration
+    function createPaymentIntentAndProcessRegistration(userId, $form, $button, $message) {
         $.ajax({
             url: ieltsMS.ajaxUrl,
             type: 'POST',
@@ -214,33 +246,32 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success && response.data.clientSecret) {
-                    // Initialize Stripe Elements
-                    const options = {
+                    // Validate that Stripe Elements were initialized
+                    if (!elements || !registrationStripeInitialized) {
+                        $message.removeClass('success').addClass('error').text('Payment system not initialized. Please refresh the page and try again.').show();
+                        $button.removeClass('loading').prop('disabled', false);
+                        return;
+                    }
+                    
+                    // Immediately confirm the payment with Stripe
+                    stripe.confirmPayment({
+                        elements: elements,
                         clientSecret: response.data.clientSecret,
-                        appearance: {
-                            theme: 'stripe',
-                            variables: {
-                                colorPrimary: '#0073aa'
-                            }
+                        confirmParams: {
+                            return_url: window.location.origin + window.location.pathname
+                        },
+                        redirect: 'if_required'
+                    }).then(function(result) {
+                        if (result.error) {
+                            // Show error to customer
+                            $('#payment-errors').removeClass('success').addClass('error').text(result.error.message).show();
+                            $message.removeClass('success').addClass('error').text('Payment failed: ' + result.error.message).show();
+                            $button.removeClass('loading').prop('disabled', false);
+                        } else {
+                            // Payment succeeded
+                            confirmPaymentOnServer(result.paymentIntent.id, response.data.payment_id, $button, $message);
                         }
-                    };
-                    
-                    elements = stripe.elements(options);
-                    paymentElement = elements.create('payment');
-                    paymentElement.mount('#payment-element');
-                    
-                    // Show the payment section
-                    $('#stripe-payment-section').slideDown();
-                    
-                    // Update button text
-                    $button.text('Complete Payment');
-                    $button.removeClass('loading').prop('disabled', false);
-                    
-                    // Store payment data for submission
-                    $form.data('clientSecret', response.data.clientSecret);
-                    $form.data('paymentId', response.data.payment_id);
-                    $form.data('userId', userId);
-                    $form.data('stripeInitialized', true);
+                    });
                 } else {
                     $message.removeClass('success').addClass('error').text(response.data.message || 'Failed to initialize payment').show();
                     $button.removeClass('loading').prop('disabled', false);
