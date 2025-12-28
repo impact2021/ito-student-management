@@ -79,9 +79,17 @@ class IELTS_MS_Login_Manager {
             wp_send_json_error(array('message' => $user->get_error_message()));
         }
         
+        // Determine redirect URL based on user role
+        // Admins should go to WordPress admin dashboard, regular users to account page
+        if (user_can($user, 'manage_options')) {
+            $redirect_url = admin_url();
+        } else {
+            $redirect_url = get_permalink(get_option('ielts_ms_account_page_id'));
+        }
+        
         wp_send_json_success(array(
             'message' => 'Login successful',
-            'redirect' => get_permalink(get_option('ielts_ms_account_page_id'))
+            'redirect' => $redirect_url
         ));
     }
     
