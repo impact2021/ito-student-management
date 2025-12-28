@@ -91,13 +91,20 @@ jQuery(document).ready(function($) {
         const $message = $form.find('.ielts-ms-message');
         
         // Check if this is the second click (payment submission)
-        if ($button.data('paymentReady') === true) {
+        if ($button.data('paymentReady') === true || $button.data('paymentReady') === 'true') {
             // This is the second click - confirm the payment
             $button.addClass('loading').prop('disabled', true);
             $message.hide();
             
             const clientSecret = $button.data('clientSecret');
             const paymentId = $button.data('paymentId');
+            
+            // Ensure elements are initialized
+            if (!elements) {
+                $message.removeClass('success').addClass('error').text('Payment system not ready. Please refresh and try again.').show();
+                $button.removeClass('loading').prop('disabled', false);
+                return;
+            }
             
             // Confirm the payment with Stripe
             stripe.confirmPayment({
@@ -241,9 +248,11 @@ jQuery(document).ready(function($) {
                     $button.data('paymentReady', true);
                     
                     // Scroll to payment element
-                    $('html, body').animate({
-                        scrollTop: $('#payment-element').offset().top - 100
-                    }, 500);
+                    if ($('#payment-element').length > 0) {
+                        $('html, body').animate({
+                            scrollTop: $('#payment-element').offset().top - 100
+                        }, 500);
+                    }
                 } else {
                     $message.removeClass('success').addClass('error').text(response.data.message || 'Failed to initialize payment').show();
                     $button.removeClass('loading').prop('disabled', false);
