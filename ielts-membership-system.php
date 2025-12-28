@@ -134,7 +134,7 @@ function ielts_ms_protect_content() {
         return '/' . $type . '/';
     }, $protected_post_types);
     
-    // Check if it's a custom post type for exercises or sublessons
+    // Check if it's a custom post type for exercises, sublessons, or lesson-pages
     if (in_array($post_type, $protected_post_types)) {
         $is_protected_content = true;
     }
