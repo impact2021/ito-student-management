@@ -57,8 +57,20 @@ jQuery(document).ready(function($) {
             return;
         }
         
-        // We need to initialize elements with setup mode since we don't have user yet
-        // Using a temporary setup for card input
+        // Validate required DOM elements exist
+        if (!$('#payment-element').length || !$('input[name="membership_amount"]').length) {
+            console.error('Required elements for Stripe initialization not found');
+            return;
+        }
+        
+        // Validate amount is valid
+        const amountValue = parseFloat($('input[name="membership_amount"]').val());
+        if (isNaN(amountValue) || amountValue <= 0) {
+            console.error('Invalid membership amount for Stripe initialization');
+            return;
+        }
+        
+        // Initialize Stripe Elements with payment mode
         const appearance = {
             theme: 'stripe',
             variables: {
@@ -68,7 +80,7 @@ jQuery(document).ready(function($) {
         
         elements = stripe.elements({
             mode: 'payment',
-            amount: parseFloat($('input[name="membership_amount"]').val()) * 100, // Convert to cents
+            amount: amountValue * 100, // Convert to cents
             currency: 'usd',
             appearance: appearance
         });
@@ -220,6 +232,13 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success && response.data.clientSecret) {
+                    // Validate that Stripe Elements were initialized
+                    if (!elements || !registrationStripeInitialized) {
+                        $message.removeClass('success').addClass('error').text('Payment system not initialized. Please refresh the page and try again.').show();
+                        $button.removeClass('loading').prop('disabled', false);
+                        return;
+                    }
+                    
                     // Immediately confirm the payment with Stripe
                     stripe.confirmPayment({
                         elements: elements,
