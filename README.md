@@ -137,6 +137,16 @@ For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
 
+### Version 3.6
+- Fixed PayPal 500 error in admin-ajax.php by adding proper error handling and validation
+- Added missing return statement after error responses in PayPal payment handler
+- Added comprehensive parameter validation for PayPal payments
+- Implemented real-time username availability check during registration
+- Implemented real-time email availability check during registration
+- Added AJAX endpoints for checking username and email availability
+- Added visual feedback for duplicate username/email detection
+- Improved user experience with inline validation messages
+
 ### Version 3.5
 - Fixed PayPal payment error handling to properly display error messages when payment processing fails
 - Added missing AJAX error callback for PayPal payment function

@@ -27,29 +27,53 @@ class IELTS_MS_PayPal_Gateway extends IELTS_MS_Payment_Gateway {
      * AJAX handler for processing payment
      */
     public function ajax_process_payment() {
-        check_ajax_referer('ielts_ms_nonce', 'nonce');
-        
-        $gateway = sanitize_text_field($_POST['gateway']);
-        
-        if ($gateway !== 'paypal') {
-            return; // Not for this gateway
-        }
-        
-        $user_id = get_current_user_id();
-        if (!$user_id) {
-            wp_send_json_error(array('message' => 'User not logged in'));
-        }
-        
-        $amount = floatval($_POST['amount']);
-        $duration_days = intval($_POST['duration_days']);
-        $payment_type = sanitize_text_field($_POST['payment_type']);
-        
-        $result = $this->process_payment($amount, $user_id, $duration_days, $payment_type);
-        
-        if ($result['success']) {
-            wp_send_json_success($result);
-        } else {
-            wp_send_json_error($result);
+        try {
+            check_ajax_referer('ielts_ms_nonce', 'nonce');
+            
+            // Validate required POST variables
+            if (!isset($_POST['gateway'])) {
+                wp_send_json_error(array('message' => 'Payment gateway not specified'));
+                return;
+            }
+            
+            $gateway = sanitize_text_field($_POST['gateway']);
+            
+            if ($gateway !== 'paypal') {
+                return; // Not for this gateway
+            }
+            
+            $user_id = get_current_user_id();
+            if (!$user_id) {
+                wp_send_json_error(array('message' => 'User not logged in'));
+                return;
+            }
+            
+            // Validate required payment parameters
+            if (!isset($_POST['amount']) || !isset($_POST['duration_days']) || !isset($_POST['payment_type'])) {
+                wp_send_json_error(array('message' => 'Missing required payment parameters'));
+                return;
+            }
+            
+            $amount = floatval($_POST['amount']);
+            $duration_days = intval($_POST['duration_days']);
+            $payment_type = sanitize_text_field($_POST['payment_type']);
+            
+            // Validate payment amount and duration
+            if ($amount <= 0 || $duration_days <= 0) {
+                wp_send_json_error(array('message' => 'Invalid payment amount or duration'));
+                return;
+            }
+            
+            $result = $this->process_payment($amount, $user_id, $duration_days, $payment_type);
+            
+            if ($result['success']) {
+                wp_send_json_success($result);
+            } else {
+                wp_send_json_error($result);
+            }
+        } catch (Exception $e) {
+            error_log('PayPal payment error: ' . $e->getMessage());
+            wp_send_json_error(array('message' => 'An error occurred processing your payment. Please try again.'));
         }
     }
     

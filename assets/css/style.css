@@ -637,3 +637,30 @@
 #payment-errors {
     margin-top: 10px;
 }
+
+/* Validation Messages */
+.validation-message {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.validation-message.success {
+    color: #155724;
+}
+
+.validation-message.error {
+    color: #721c24;
+}
+
+/* Input checking state */
+.ielts-ms-form-group input.checking {
+    background-color: #f8f8f8;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.ielts-ms-form-group input.checking::after {
+    content: '...';
+}
