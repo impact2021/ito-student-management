@@ -137,6 +137,11 @@ For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
 
+### Version 3.5
+- Fixed PayPal payment error handling to properly display error messages when payment processing fails
+- Added missing AJAX error callback for PayPal payment function
+- Updated plugin version to 3.5
+
 ### Version 3.4
 - Updated plugin to version 3.4
 - Updated minimum WordPress requirement to 6.0

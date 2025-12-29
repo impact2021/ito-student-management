@@ -719,6 +719,9 @@ jQuery(document).ready(function($) {
                 } else {
                     alert(response.data.message || 'Payment processing failed');
                 }
+            },
+            error: function() {
+                alert('An error occurred. Please try again.');
             }
         });
     }
