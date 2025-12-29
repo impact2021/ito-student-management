@@ -183,10 +183,9 @@ jQuery(document).ready(function($) {
             return;
         }
         
-        // Basic email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return; // Let the browser's built-in validation handle this
+        // Basic email format validation - let server do comprehensive validation
+        if (email.indexOf('@') === -1) {
+            return; // Skip if no @ sign - let the browser's built-in validation handle this
         }
         
         // Add a loading indicator class
