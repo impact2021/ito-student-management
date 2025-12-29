@@ -19,6 +19,8 @@ class IELTS_MS_Login_Manager {
         add_action('wp_ajax_nopriv_ielts_ms_register_with_payment', array($this, 'handle_register_with_payment'));
         add_action('wp_ajax_nopriv_ielts_ms_forgot_password', array($this, 'handle_forgot_password'));
         add_action('wp_ajax_nopriv_ielts_ms_reset_password', array($this, 'handle_reset_password'));
+        add_action('wp_ajax_nopriv_ielts_ms_check_username', array($this, 'check_username_availability'));
+        add_action('wp_ajax_nopriv_ielts_ms_check_email', array($this, 'check_email_availability'));
     }
     
     /**
@@ -494,5 +496,50 @@ class IELTS_MS_Login_Manager {
             'message' => 'Password reset successful',
             'redirect' => get_permalink(get_option('ielts_ms_login_page_id'))
         ));
+    }
+    
+    /**
+     * Check username availability
+     */
+    public function check_username_availability() {
+        check_ajax_referer('ielts_ms_nonce', 'nonce');
+        
+        if (!isset($_POST['username']) || empty($_POST['username'])) {
+            wp_send_json_error(array('message' => 'Username is required'));
+            return;
+        }
+        
+        $username = sanitize_user($_POST['username']);
+        
+        if (username_exists($username)) {
+            wp_send_json_error(array('message' => 'This username is already taken'));
+        } else {
+            wp_send_json_success(array('message' => 'Username is available'));
+        }
+    }
+    
+    /**
+     * Check email availability
+     */
+    public function check_email_availability() {
+        check_ajax_referer('ielts_ms_nonce', 'nonce');
+        
+        if (!isset($_POST['email']) || empty($_POST['email'])) {
+            wp_send_json_error(array('message' => 'Email is required'));
+            return;
+        }
+        
+        $email = sanitize_email($_POST['email']);
+        
+        if (!is_email($email)) {
+            wp_send_json_error(array('message' => 'Invalid email address'));
+            return;
+        }
+        
+        if (email_exists($email)) {
+            wp_send_json_error(array('message' => 'This email is already registered'));
+        } else {
+            wp_send_json_success(array('message' => 'Email is available'));
+        }
     }
 }

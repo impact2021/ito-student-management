@@ -134,6 +134,92 @@ jQuery(document).ready(function($) {
         });
     });
     
+    // Real-time username availability check
+    $('#reg_username').on('blur', function() {
+        const username = $(this).val().trim();
+        
+        // Skip check if username is empty
+        if (!username) {
+            return;
+        }
+        
+        // Add a loading indicator class
+        $(this).addClass('checking');
+        
+        $.ajax({
+            url: ieltsMS.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'ielts_ms_check_username',
+                nonce: ieltsMS.nonce,
+                username: username
+            },
+            success: function(response) {
+                $('#reg_username').removeClass('checking');
+                
+                // Remove any previous validation messages
+                $('#reg_username').siblings('.validation-message').remove();
+                
+                if (response.success) {
+                    // Username is available - show success indicator
+                    $('#reg_username').after('<span class="validation-message success">✓ Username is available</span>');
+                } else {
+                    // Username is taken - show error
+                    $('#reg_username').after('<span class="validation-message error">✗ ' + response.data.message + '</span>');
+                }
+            },
+            error: function() {
+                $('#reg_username').removeClass('checking');
+            }
+        });
+    });
+    
+    // Real-time email availability check
+    $('#reg_email').on('blur', function() {
+        const email = $(this).val().trim();
+        
+        // Skip check if email is empty
+        if (!email) {
+            return;
+        }
+        
+        // Basic email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return; // Let the browser's built-in validation handle this
+        }
+        
+        // Add a loading indicator class
+        $(this).addClass('checking');
+        
+        $.ajax({
+            url: ieltsMS.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'ielts_ms_check_email',
+                nonce: ieltsMS.nonce,
+                email: email
+            },
+            success: function(response) {
+                $('#reg_email').removeClass('checking');
+                
+                // Remove any previous validation messages
+                $('#reg_email').siblings('.validation-message').remove();
+                
+                if (response.success) {
+                    // Email is available - show success indicator
+                    $('#reg_email').after('<span class="validation-message success">✓ Email is available</span>');
+                } else {
+                    // Email is taken - show error
+                    $('#reg_email').after('<span class="validation-message error">✗ ' + response.data.message + '</span>');
+                }
+            },
+            error: function() {
+                $('#reg_email').removeClass('checking');
+            }
+        });
+    });
+    
     // Registration form
     $('#ielts-ms-register-form').on('submit', function(e) {
         e.preventDefault();
