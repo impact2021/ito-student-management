@@ -81,9 +81,14 @@ class IELTS_MS_Login_Manager {
             wp_send_json_error(array('message' => $user->get_error_message()));
         }
         
+        // Redirect admins to wp-admin, regular users to account page
+        $redirect_url = user_can($user, 'manage_options') 
+            ? admin_url() 
+            : get_permalink(get_option('ielts_ms_account_page_id'));
+        
         wp_send_json_success(array(
             'message' => 'Login successful',
-            'redirect' => get_permalink(get_option('ielts_ms_account_page_id'))
+            'redirect' => $redirect_url
         ));
     }
     
