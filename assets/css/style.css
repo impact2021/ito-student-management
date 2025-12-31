@@ -185,24 +185,6 @@
     text-decoration: underline;
 }
 
-/* Legacy Notice */
-.ielts-ms-legacy-notice {
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
-    text-align: center;
-}
-
-.ielts-ms-legacy-link {
-    color: #0073aa;
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.ielts-ms-legacy-link:hover {
-    text-decoration: underline;
-}
-
 /* Account Page */
 .ielts-ms-account-header {
     margin-bottom: 40px;
