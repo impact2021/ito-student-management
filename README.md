@@ -20,7 +20,6 @@ A complete membership and payment system for IELTS preparation courses with PayP
   - Custom login/registration pages
   - Forgot password functionality
   - Replaces WordPress default login
-  - Link to legacy course for pre-2026 enrollees
 
 - **Account Management**
   - View membership status and expiration
@@ -127,15 +126,18 @@ The plugin creates two custom tables:
 1. `wp_ielts_ms_memberships` - Stores membership records
 2. `wp_ielts_ms_payments` - Stores payment transactions
 
-## Legacy Users
-
-Users enrolled before January 1, 2026 can access the old course version via a link on the login page that redirects to `https://www.ieltstestonline.com/older-version/`
-
 ## Support
 
 For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
+
+### Version 9.0
+- Updated plugin version from 3.6 to 9.0
+- Removed legacy course link for pre-2026 enrollees
+- Removed legacy notice section from login page
+- Streamlined login page interface
+- Cleaned up CSS styling by removing legacy-related styles
 
 ### Version 3.6
 - Fixed PayPal 500 error in admin-ajax.php by adding proper error handling and validation

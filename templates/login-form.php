@@ -115,14 +115,6 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                 |
                 <a href="<?php echo get_permalink(get_page_by_path('membership-register')); ?>"><?php _e('Register', 'ielts-membership-system'); ?></a>
             </div>
-            
-            <div class="ielts-ms-legacy-notice">
-                <p>
-                    <a href="https://www.ieltstestonline.com/older-version/" class="ielts-ms-legacy-link">
-                        <?php _e('I enrolled before 1st January 2026', 'ielts-membership-system'); ?>
-                    </a>
-                </p>
-            </div>
         </div>
     <?php endif; ?>
 </div>

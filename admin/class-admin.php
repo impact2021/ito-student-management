@@ -501,7 +501,6 @@ class IELTS_MS_Admin {
                     <li>User login with username/email and password</li>
                     <li>Forgot password link and reset functionality</li>
                     <li>Link to registration page</li>
-                    <li>Link to legacy course for pre-2026 enrollees</li>
                     <li>Automatically redirects logged-in users to their account page</li>
                 </ul>
                 <p><strong>Default Page:</strong> <code>/membership-login/</code></p>
