@@ -132,12 +132,11 @@ For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
 
-### Version 9.0
+### Version 9.0 (2025-12-31)
 - Updated plugin version from 3.6 to 9.0
-- Removed legacy course link for pre-2026 enrollees
-- Removed legacy notice section from login page
-- Streamlined login page interface
-- Cleaned up CSS styling by removing legacy-related styles
+- Removed legacy course link and notice for pre-2026 enrollees from login page
+- Removed legacy-related CSS styles (.ielts-ms-legacy-notice, .ielts-ms-legacy-link)
+- Updated admin documentation to reflect removed features
 
 ### Version 3.6
 - Fixed PayPal 500 error in admin-ajax.php by adding proper error handling and validation
