@@ -92,6 +92,22 @@ class IELTS_MS_Admin {
         register_setting('ielts_ms_settings', 'ielts_ms_price_extend_7');
         register_setting('ielts_ms_settings', 'ielts_ms_price_extend_30');
         register_setting('ielts_ms_settings', 'ielts_ms_price_extend_90');
+        
+        // Trial settings
+        register_setting('ielts_ms_settings', 'ielts_ms_trial_enabled');
+        register_setting('ielts_ms_settings', 'ielts_ms_trial_duration');
+        
+        // Email settings
+        register_setting('ielts_ms_settings', 'ielts_ms_email_from_name');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_from_email');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_trial_enrollment_subject');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_trial_enrollment_message');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_trial_expiration_subject');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_trial_expiration_message');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_paid_enrollment_subject');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_paid_enrollment_message');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_paid_expiration_subject');
+        register_setting('ielts_ms_settings', 'ielts_ms_email_paid_expiration_message');
     }
     
     /**
@@ -146,6 +162,34 @@ class IELTS_MS_Admin {
             }
             if (isset($_POST['price_extend_90'])) {
                 update_option('ielts_ms_price_extend_90', floatval($_POST['price_extend_90']));
+            }
+            
+            // Update trial settings
+            update_option('ielts_ms_trial_enabled', isset($_POST['trial_enabled']));
+            if (isset($_POST['trial_duration'])) {
+                update_option('ielts_ms_trial_duration', intval($_POST['trial_duration']));
+            }
+            
+            // Update email settings
+            if (isset($_POST['email_from_name'])) {
+                update_option('ielts_ms_email_from_name', sanitize_text_field($_POST['email_from_name']));
+            }
+            if (isset($_POST['email_from_email'])) {
+                update_option('ielts_ms_email_from_email', sanitize_email($_POST['email_from_email']));
+            }
+            
+            // Update email templates
+            $email_fields = array(
+                'trial_enrollment_subject', 'trial_enrollment_message',
+                'trial_expiration_subject', 'trial_expiration_message',
+                'paid_enrollment_subject', 'paid_enrollment_message',
+                'paid_expiration_subject', 'paid_expiration_message'
+            );
+            
+            foreach ($email_fields as $field) {
+                if (isset($_POST['email_' . $field])) {
+                    update_option('ielts_ms_email_' . $field, wp_kses_post($_POST['email_' . $field]));
+                }
             }
             
             echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
@@ -355,6 +399,109 @@ class IELTS_MS_Admin {
                         <td>
                             $<input type="number" step="0.01" min="0" name="price_extend_90" value="<?php echo esc_attr(get_option('ielts_ms_price_extend_90', 20.00)); ?>" class="small-text"> USD
                             <p class="description">Price for a 90-day extension</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2>Trial Settings</h2>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Enable Free Trial</th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="trial_enabled" value="1" <?php checked(get_option('ielts_ms_trial_enabled', false)); ?>>
+                                Enable free trial for new users
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Trial Duration</th>
+                        <td>
+                            <input type="number" min="1" max="30" name="trial_duration" value="<?php echo esc_attr(get_option('ielts_ms_trial_duration', 3)); ?>" class="small-text"> days
+                            <p class="description">Duration of the free trial (default: 3 days)</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h2>Email Settings</h2>
+                <p class="description">Configure email sender and customize notification templates. Available placeholders: {user_name}, {user_email}, {enrollment_type}, {duration}, {expiry_date}, {account_url}, {site_name}, {site_url}</p>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">From Name</th>
+                        <td>
+                            <input type="text" name="email_from_name" value="<?php echo esc_attr(get_option('ielts_ms_email_from_name', get_bloginfo('name'))); ?>" class="regular-text">
+                            <p class="description">The name emails will be sent from</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">From Email</th>
+                        <td>
+                            <input type="email" name="email_from_email" value="<?php echo esc_attr(get_option('ielts_ms_email_from_email', get_bloginfo('admin_email'))); ?>" class="regular-text">
+                            <p class="description">The email address emails will be sent from</p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h3>Trial Enrollment Email</h3>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Subject</th>
+                        <td>
+                            <input type="text" name="email_trial_enrollment_subject" value="<?php echo esc_attr(get_option('ielts_ms_email_trial_enrollment_subject', IELTS_MS_Email_Manager::get_default_templates()['trial_enrollment_subject'])); ?>" class="large-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Message</th>
+                        <td>
+                            <textarea name="email_trial_enrollment_message" rows="6" class="large-text"><?php echo esc_textarea(get_option('ielts_ms_email_trial_enrollment_message', IELTS_MS_Email_Manager::get_default_templates()['trial_enrollment_message'])); ?></textarea>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h3>Trial Expiration Email</h3>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Subject</th>
+                        <td>
+                            <input type="text" name="email_trial_expiration_subject" value="<?php echo esc_attr(get_option('ielts_ms_email_trial_expiration_subject', IELTS_MS_Email_Manager::get_default_templates()['trial_expiration_subject'])); ?>" class="large-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Message</th>
+                        <td>
+                            <textarea name="email_trial_expiration_message" rows="6" class="large-text"><?php echo esc_textarea(get_option('ielts_ms_email_trial_expiration_message', IELTS_MS_Email_Manager::get_default_templates()['trial_expiration_message'])); ?></textarea>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h3>Paid Enrollment Email</h3>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Subject</th>
+                        <td>
+                            <input type="text" name="email_paid_enrollment_subject" value="<?php echo esc_attr(get_option('ielts_ms_email_paid_enrollment_subject', IELTS_MS_Email_Manager::get_default_templates()['paid_enrollment_subject'])); ?>" class="large-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Message</th>
+                        <td>
+                            <textarea name="email_paid_enrollment_message" rows="6" class="large-text"><?php echo esc_textarea(get_option('ielts_ms_email_paid_enrollment_message', IELTS_MS_Email_Manager::get_default_templates()['paid_enrollment_message'])); ?></textarea>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h3>Paid Membership Expiration Email</h3>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">Subject</th>
+                        <td>
+                            <input type="text" name="email_paid_expiration_subject" value="<?php echo esc_attr(get_option('ielts_ms_email_paid_expiration_subject', IELTS_MS_Email_Manager::get_default_templates()['paid_expiration_subject'])); ?>" class="large-text">
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Message</th>
+                        <td>
+                            <textarea name="email_paid_expiration_message" rows="6" class="large-text"><?php echo esc_textarea(get_option('ielts_ms_email_paid_expiration_message', IELTS_MS_Email_Manager::get_default_templates()['paid_expiration_message'])); ?></textarea>
                         </td>
                     </tr>
                 </table>

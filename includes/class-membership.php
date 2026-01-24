@@ -21,7 +21,7 @@ class IELTS_MS_Membership {
     /**
      * Create or update membership
      */
-    public function create_membership($user_id, $duration_days, $payment_id = null) {
+    public function create_membership($user_id, $duration_days, $payment_id = null, $enrollment_type = 'both', $is_trial = false) {
         global $wpdb;
         $table = IELTS_MS_Database::get_memberships_table();
         
@@ -40,15 +40,25 @@ class IELTS_MS_Membership {
         
         if ($existing) {
             // Update existing membership - keep original start_date
+            // Don't downgrade enrollment_type if extending
+            $update_data = array(
+                'status' => 'active',
+                'end_date' => $end_date,
+                'updated_date' => current_time('mysql')
+            );
+            
+            // Only update enrollment_type if it's an upgrade or new purchase (not trial)
+            if (!$is_trial && $enrollment_type === 'both') {
+                $update_data['enrollment_type'] = $enrollment_type;
+            } elseif (!$is_trial && $existing->enrollment_type !== 'both') {
+                $update_data['enrollment_type'] = $enrollment_type;
+            }
+            
             $result = $wpdb->update(
                 $table,
-                array(
-                    'status' => 'active',
-                    'end_date' => $end_date,
-                    'updated_date' => current_time('mysql')
-                ),
+                $update_data,
                 array('id' => $existing->id),
-                array('%s', '%s', '%s'),
+                array_fill(0, count($update_data), '%s'),
                 array('%d')
             );
             $membership_id = $existing->id;
@@ -59,10 +69,12 @@ class IELTS_MS_Membership {
                 array(
                     'user_id' => $user_id,
                     'status' => 'active',
+                    'enrollment_type' => $enrollment_type,
+                    'is_trial' => $is_trial ? 1 : 0,
                     'start_date' => $start_date,
                     'end_date' => $end_date
                 ),
-                array('%d', '%s', '%s', '%s')
+                array('%d', '%s', '%s', '%d', '%s', '%s')
             );
             $membership_id = $wpdb->insert_id;
         }
@@ -88,6 +100,13 @@ class IELTS_MS_Membership {
             if (!in_array('active', $user->roles)) {
                 $user->add_role('active');
             }
+        }
+        
+        // Send appropriate email
+        if ($is_trial) {
+            IELTS_MS_Email_Manager::send_trial_enrollment_email($user_id);
+        } else {
+            IELTS_MS_Email_Manager::send_paid_enrollment_email($user_id, $enrollment_type, $duration_days);
         }
         
         return $membership_id;
@@ -142,6 +161,11 @@ class IELTS_MS_Membership {
         global $wpdb;
         $table = IELTS_MS_Database::get_memberships_table();
         
+        // Get membership before expiring to check if it was trial
+        $membership = $this->get_user_membership($user_id);
+        $was_trial = $membership && $membership->is_trial;
+        $was_paid = $membership && !$membership->is_trial;
+        
         $result = $wpdb->update(
             $table,
             array(
@@ -165,6 +189,13 @@ class IELTS_MS_Membership {
             if (!in_array('expired', $user->roles)) {
                 $user->add_role('expired');
             }
+        }
+        
+        // Send appropriate expiration email
+        if ($was_trial) {
+            IELTS_MS_Email_Manager::send_trial_expiration_email($user_id);
+        } elseif ($was_paid) {
+            IELTS_MS_Email_Manager::send_paid_expiration_email($user_id);
         }
         
         return $result;
@@ -194,6 +225,11 @@ class IELTS_MS_Membership {
      * Hook into IELTS Course Manager to check access
      */
     public function check_course_access($has_access, $user_id) {
+        // Admins always have full access
+        if (user_can($user_id, 'manage_options')) {
+            return true;
+        }
+        
         // If already has access (admin, etc), don't override
         if ($has_access) {
             return $has_access;
@@ -221,5 +257,78 @@ class IELTS_MS_Membership {
         ));
         
         return $memberships;
+    }
+    
+    /**
+     * Check if user is eligible for trial
+     */
+    public function is_trial_eligible($email) {
+        global $wpdb;
+        $table = IELTS_MS_Database::get_trial_usage_table();
+        
+        $used = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE email = %s",
+            $email
+        ));
+        
+        return $used == 0;
+    }
+    
+    /**
+     * Mark trial as used for email
+     */
+    public function mark_trial_used($email, $user_id = null) {
+        global $wpdb;
+        $table = IELTS_MS_Database::get_trial_usage_table();
+        
+        return $wpdb->insert(
+            $table,
+            array(
+                'email' => $email,
+                'user_id' => $user_id
+            ),
+            array('%s', '%d')
+        );
+    }
+    
+    /**
+     * Check if user has access to specific course based on enrollment type
+     */
+    public function has_course_access($user_id, $course_id) {
+        // Admins always have access
+        if (user_can($user_id, 'manage_options')) {
+            return true;
+        }
+        
+        // Check if user has active membership
+        if (!$this->has_active_membership($user_id)) {
+            return false;
+        }
+        
+        $membership = $this->get_user_membership($user_id);
+        
+        // If enrollment type is 'both', user has access to all courses
+        if ($membership->enrollment_type === 'both') {
+            return true;
+        }
+        
+        // Get course modules
+        $course_modules = wp_get_post_terms($course_id, 'ielts_module', array('fields' => 'slugs'));
+        
+        // If no modules assigned, course is accessible to all
+        if (empty($course_modules)) {
+            return true;
+        }
+        
+        // Check if user's enrollment type matches any of the course modules
+        if ($membership->enrollment_type === 'general_training' && in_array('general-training', $course_modules)) {
+            return true;
+        }
+        
+        if ($membership->enrollment_type === 'academic' && in_array('academic', $course_modules)) {
+            return true;
+        }
+        
+        return false;
     }
 }

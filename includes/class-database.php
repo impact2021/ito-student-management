@@ -11,11 +11,13 @@ class IELTS_MS_Database {
     
     private static $memberships_table;
     private static $payments_table;
+    private static $trial_usage_table;
     
     public function __construct() {
         global $wpdb;
         self::$memberships_table = $wpdb->prefix . 'ielts_ms_memberships';
         self::$payments_table = $wpdb->prefix . 'ielts_ms_payments';
+        self::$trial_usage_table = $wpdb->prefix . 'ielts_ms_trial_usage';
     }
     
     /**
@@ -31,6 +33,8 @@ class IELTS_MS_Database {
             id bigint(20) NOT NULL AUTO_INCREMENT,
             user_id bigint(20) NOT NULL,
             status varchar(20) DEFAULT 'active',
+            enrollment_type varchar(20) DEFAULT 'both',
+            is_trial tinyint(1) DEFAULT 0,
             start_date datetime NOT NULL,
             end_date datetime NOT NULL,
             created_date datetime DEFAULT CURRENT_TIMESTAMP,
@@ -38,7 +42,9 @@ class IELTS_MS_Database {
             PRIMARY KEY  (id),
             KEY user_id (user_id),
             KEY status (status),
-            KEY end_date (end_date)
+            KEY end_date (end_date),
+            KEY enrollment_type (enrollment_type),
+            KEY is_trial (is_trial)
         ) $charset_collate;";
         
         // Payments table
@@ -62,9 +68,22 @@ class IELTS_MS_Database {
             KEY payment_status (payment_status)
         ) $charset_collate;";
         
+        // Trial usage tracking table
+        $trial_usage_table = $wpdb->prefix . 'ielts_ms_trial_usage';
+        $sql_trial_usage = "CREATE TABLE IF NOT EXISTS $trial_usage_table (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            email varchar(255) NOT NULL,
+            user_id bigint(20) DEFAULT NULL,
+            trial_date datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY email (email),
+            KEY user_id (user_id)
+        ) $charset_collate;";
+        
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql_memberships);
         dbDelta($sql_payments);
+        dbDelta($sql_trial_usage);
     }
     
     /**
@@ -78,5 +97,10 @@ class IELTS_MS_Database {
     public static function get_payments_table() {
         global $wpdb;
         return $wpdb->prefix . 'ielts_ms_payments';
+    }
+    
+    public static function get_trial_usage_table() {
+        global $wpdb;
+        return $wpdb->prefix . 'ielts_ms_trial_usage';
     }
 }
