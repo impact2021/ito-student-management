@@ -1,14 +1,35 @@
 # IELTS Membership System
 
-A complete membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
+A complete membership and payment system for IELTS preparation courses with PayPal and Stripe integration, course module management, and free trial support.
 
 ## Features
+
+- **Course Module Management**
+  - General Training and Academic module options
+  - Module-based course access control
+  - Custom post types: ielts_course, ielts_lesson, ielts_resource, ielts_quiz
+  - Course taxonomy for organizing by module
+
+- **Free Trial System**
+  - Configurable trial duration (default: 3 days)
+  - One trial per email address enforcement
+  - Toggle trial availability on/off
+  - Module selection during trial signup
 
 - **Membership Management**
   - 90-day membership ($24.95 USD)
   - Membership extensions (1 week - $5, 1 month - $10, 3 months - $20)
   - Automatic expiration tracking
-  - Full access to all IELTS courses when active
+  - Module-specific access control (General Training, Academic, or Both)
+  - Full admin access without membership requirement
+
+- **Email Notifications**
+  - Trial enrollment confirmation
+  - Trial expiration notice
+  - Paid enrollment confirmation
+  - Paid membership expiration notice
+  - Fully customizable email templates
+  - Support for dynamic placeholders
 
 - **Payment Integration**
   - PayPal Standard integration
@@ -77,6 +98,53 @@ Customize membership pricing in **Membership > Settings** under the Pricing Sett
 
 All prices can be adjusted to suit your business needs.
 
+### Trial Settings
+
+Configure free trial availability in **Membership > Settings** under the Trial Settings section:
+- **Enable Free Trial** - Toggle to enable/disable free trial for new users
+- **Trial Duration** - Set trial duration in days (default: 3 days)
+
+**Note:** One trial per email address is automatically enforced. Users can select their course module (General Training, Academic, or Both) when signing up for the trial.
+
+### Email Settings
+
+Customize all email notifications in **Membership > Settings** under the Email Settings section:
+
+**Sender Configuration:**
+- **From Name** - The name emails will be sent from
+- **From Email** - The email address emails will be sent from
+
+**Email Templates:**
+Each email template supports the following placeholders:
+- `{user_name}` - User's display name
+- `{user_email}` - User's email address
+- `{enrollment_type}` - Selected course module (General Training, Academic, or Both)
+- `{duration}` - Membership duration in days
+- `{expiry_date}` - Membership expiration date
+- `{account_url}` - Link to user's account page
+- `{site_name}` - Your site name
+- `{site_url}` - Your site URL
+
+**Customizable Templates:**
+1. **Trial Enrollment Email** - Sent when user starts free trial
+2. **Trial Expiration Email** - Sent when trial expires
+3. **Paid Enrollment Email** - Sent when user purchases membership
+4. **Paid Membership Expiration Email** - Sent when paid membership expires
+
+### Course Module Management
+
+The system includes custom post types for managing IELTS courses:
+
+1. **IELTS Courses** - Main course container
+2. **IELTS Lessons** - Individual lessons within courses
+3. **IELTS Resources** - Downloadable resources and materials
+4. **IELTS Quizzes** - Assessment and practice quizzes
+
+**Module Taxonomy:**
+- Courses can be assigned to "General Training" or "Academic" modules
+- Users only see courses matching their enrollment type
+- Admins have full access to all courses regardless of enrollment
+
 ## Usage
 
 ### Shortcodes
@@ -121,16 +189,40 @@ This plugin integrates with the IELTS Course Manager plugin to control access:
 
 ## Database Tables
 
-The plugin creates two custom tables:
+The plugin creates three custom tables:
 
-1. `wp_ielts_ms_memberships` - Stores membership records
+1. `wp_ielts_ms_memberships` - Stores membership records with enrollment type and trial status
 2. `wp_ielts_ms_payments` - Stores payment transactions
+3. `wp_ielts_ms_trial_usage` - Tracks trial usage by email to enforce one trial per email
 
 ## Support
 
 For support or questions, contact the plugin maintainer at IELTStestONLINE.
 
 ## Changelog
+
+### Version 10.0 (2026-01-24)
+- **NEW**: Added course module system (General Training and Academic)
+- **NEW**: Registered custom post types: ielts_course, ielts_lesson, ielts_resource, ielts_quiz
+- **NEW**: Added ielts_module taxonomy for organizing courses
+- **NEW**: Implemented free trial system with configurable duration
+- **NEW**: One trial per email address enforcement
+- **NEW**: Trial toggle in admin settings
+- **NEW**: Complete email notification system
+  - Trial enrollment confirmation email
+  - Trial expiration email
+  - Paid enrollment confirmation email
+  - Paid membership expiration email
+- **NEW**: Customizable email templates with placeholder support
+- **NEW**: Email sender configuration
+- **NEW**: Module-based course access control
+- **NEW**: Enrollment type selection during registration (General Training, Academic, or Both)
+- **NEW**: Trial/Paid membership toggle on registration page
+- **ENHANCED**: Admin access - admins now have full access without membership requirement
+- **ENHANCED**: Membership database schema with enrollment_type and is_trial columns
+- **ENHANCED**: Payment gateways updated to support enrollment types
+- **ENHANCED**: Registration flow supports trial and module selection
+- **ENHANCED**: JavaScript handling for dynamic form behavior
 
 ### Version 9.0 (2025-12-31)
 - Updated plugin version from 3.6 to 9.0
