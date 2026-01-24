@@ -17,6 +17,7 @@ class IELTS_MS_Login_Manager {
         add_action('wp_ajax_nopriv_ielts_ms_login', array($this, 'handle_login'));
         add_action('wp_ajax_nopriv_ielts_ms_register', array($this, 'handle_register'));
         add_action('wp_ajax_nopriv_ielts_ms_register_with_payment', array($this, 'handle_register_with_payment'));
+        add_action('wp_ajax_nopriv_ielts_ms_register_trial', array($this, 'handle_register_trial'));
         add_action('wp_ajax_nopriv_ielts_ms_forgot_password', array($this, 'handle_forgot_password'));
         add_action('wp_ajax_nopriv_ielts_ms_reset_password', array($this, 'handle_reset_password'));
         add_action('wp_ajax_nopriv_ielts_ms_check_username', array($this, 'check_username_availability'));
@@ -153,6 +154,106 @@ class IELTS_MS_Login_Manager {
     }
     
     /**
+     * Handle trial registration AJAX request
+     */
+    public function handle_register_trial() {
+        check_ajax_referer('ielts_ms_nonce', 'nonce');
+        
+        // Check if trials are enabled
+        if (!get_option('ielts_ms_trial_enabled', false)) {
+            wp_send_json_error(array('message' => 'Free trials are not currently available'));
+        }
+        
+        $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
+        $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
+        $username = sanitize_user($_POST['username']);
+        $email = sanitize_email($_POST['email']);
+        $password = $_POST['password'];
+        $confirm_password = $_POST['confirm_password'];
+        $enrollment_type = isset($_POST['enrollment_type']) ? sanitize_text_field($_POST['enrollment_type']) : 'both';
+        $trial_duration = isset($_POST['trial_duration']) ? intval($_POST['trial_duration']) : get_option('ielts_ms_trial_duration', 3);
+        
+        // Validation
+        if (empty($username) || empty($email) || empty($password)) {
+            wp_send_json_error(array('message' => 'Please fill in all required fields'));
+        }
+        
+        if (!is_email($email)) {
+            wp_send_json_error(array('message' => 'Invalid email address'));
+        }
+        
+        if ($password !== $confirm_password) {
+            wp_send_json_error(array('message' => 'Passwords do not match'));
+        }
+        
+        if (strlen($password) < 8) {
+            wp_send_json_error(array('message' => 'Password must be at least 8 characters'));
+        }
+        
+        if (username_exists($username)) {
+            wp_send_json_error(array('message' => 'Username already exists'));
+        }
+        
+        if (email_exists($email)) {
+            wp_send_json_error(array('message' => 'Email already registered'));
+        }
+        
+        // Check if email has already used trial
+        $membership = new IELTS_MS_Membership();
+        if (!$membership->is_trial_eligible($email)) {
+            wp_send_json_error(array('message' => 'This email has already been used for a free trial'));
+        }
+        
+        // Validate enrollment type
+        if (!in_array($enrollment_type, array('general_training', 'academic', 'both'))) {
+            $enrollment_type = 'both';
+        }
+        
+        // Create user account
+        $user_id = wp_create_user($username, $password, $email);
+        
+        if (is_wp_error($user_id)) {
+            wp_send_json_error(array('message' => $user_id->get_error_message()));
+        }
+        
+        // Set user role to subscriber initially
+        $user = new WP_User($user_id);
+        $user->set_role('subscriber');
+        
+        // Update user meta with first and last name
+        if (!empty($first_name)) {
+            update_user_meta($user_id, 'first_name', $first_name);
+        }
+        if (!empty($last_name)) {
+            update_user_meta($user_id, 'last_name', $last_name);
+        }
+        
+        // Set display name
+        $display_name = trim($first_name . ' ' . $last_name);
+        if (!empty($display_name)) {
+            wp_update_user(array(
+                'ID' => $user_id,
+                'display_name' => $display_name
+            ));
+        }
+        
+        // Create trial membership
+        $membership->create_membership($user_id, $trial_duration, null, $enrollment_type, true);
+        
+        // Mark trial as used for this email
+        $membership->mark_trial_used($email, $user_id);
+        
+        // Log the user in
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id);
+        
+        wp_send_json_success(array(
+            'message' => 'Your free trial has been activated! Welcome!',
+            'redirect' => get_permalink(get_option('ielts_ms_account_page_id'))
+        ));
+    }
+    
+    /**
      * Handle registration with payment AJAX request
      */
     public function handle_register_with_payment() {
@@ -168,6 +269,12 @@ class IELTS_MS_Login_Manager {
         $membership_plan = sanitize_text_field($_POST['membership_plan']);
         $membership_amount = floatval($_POST['membership_amount']);
         $membership_days = intval($_POST['membership_days']);
+        $enrollment_type = isset($_POST['enrollment_type']) ? sanitize_text_field($_POST['enrollment_type']) : 'both';
+        
+        // Validate enrollment type
+        if (!in_array($enrollment_type, array('general_training', 'academic', 'both'))) {
+            $enrollment_type = 'both';
+        }
         
         // Validation
         if (empty($username) || empty($email) || empty($password)) {
@@ -220,10 +327,11 @@ class IELTS_MS_Login_Manager {
         // Store registration data in user meta for completion after payment
         update_user_meta($user_id, 'ielts_ms_registration_pending', true);
         update_user_meta($user_id, 'ielts_ms_registration_timestamp', time());
+        update_user_meta($user_id, 'ielts_ms_enrollment_type', $enrollment_type);
         
         // Process payment based on gateway
         if ($payment_gateway === 'stripe') {
-            $this->process_stripe_registration($user_id, $email, $membership_plan, $membership_amount, $membership_days);
+            $this->process_stripe_registration($user_id, $email, $membership_plan, $membership_amount, $membership_days, $enrollment_type);
         } elseif ($payment_gateway === 'stripe_inline') {
             // For inline Stripe payment, just return user_id to continue on client side
             wp_send_json_success(array(
@@ -231,14 +339,14 @@ class IELTS_MS_Login_Manager {
                 'message' => 'Account created. Please complete payment.'
             ));
         } elseif ($payment_gateway === 'paypal') {
-            $this->process_paypal_registration($user_id, $email, $membership_plan, $membership_amount, $membership_days);
+            $this->process_paypal_registration($user_id, $email, $membership_plan, $membership_amount, $membership_days, $enrollment_type);
         }
     }
     
     /**
      * Process Stripe payment for registration
      */
-    private function process_stripe_registration($user_id, $email, $plan_key, $amount, $duration_days) {
+    private function process_stripe_registration($user_id, $email, $plan_key, $amount, $duration_days, $enrollment_type = 'both') {
         $secret_key = get_option('ielts_ms_stripe_secret_key', '');
         
         if (empty($secret_key)) {
@@ -329,7 +437,7 @@ class IELTS_MS_Login_Manager {
     /**
      * Process PayPal payment for registration
      */
-    private function process_paypal_registration($user_id, $email, $plan_key, $amount, $duration_days) {
+    private function process_paypal_registration($user_id, $email, $plan_key, $amount, $duration_days, $enrollment_type = 'both') {
         $paypal_email = get_option('ielts_ms_paypal_email', '');
         
         if (empty($paypal_email)) {
