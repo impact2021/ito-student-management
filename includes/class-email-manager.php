@@ -98,11 +98,11 @@ class IELTS_MS_Email_Manager {
      */
     public static function get_default_templates() {
         return array(
-            'trial_enrollment_subject' => 'Welcome to Your 3-Day Free Trial',
-            'trial_enrollment_message' => "Hi {user_name},\n\nWelcome to your 3-day free trial!\n\nYou now have access to all {enrollment_type} courses. Your trial will expire on {expiry_date}.\n\nTo continue learning after your trial, you can upgrade to a paid membership from your account page.\n\nBest regards,\nIELTS Online Team",
+            'trial_enrollment_subject' => 'Welcome to Your Free Trial',
+            'trial_enrollment_message' => "Hi {user_name},\n\nWelcome to your free trial!\n\nYou now have access to all {enrollment_type} courses. Your trial will expire on {expiry_date}.\n\nTo continue learning after your trial, you can upgrade to a paid membership from your account page.\n\nBest regards,\nIELTS Online Team",
             
             'trial_expiration_subject' => 'Your Free Trial Has Ended',
-            'trial_expiration_message' => "Hi {user_name},\n\nYour 3-day free trial has ended.\n\nWe hope you enjoyed exploring our courses! To continue learning, please visit your account page to purchase a membership.\n\nBest regards,\nIELTS Online Team",
+            'trial_expiration_message' => "Hi {user_name},\n\nYour free trial has ended.\n\nWe hope you enjoyed exploring our courses! To continue learning, please visit your account page to purchase a membership.\n\nBest regards,\nIELTS Online Team",
             
             'paid_enrollment_subject' => 'Welcome to IELTS Online - Membership Activated',
             'paid_enrollment_message' => "Hi {user_name},\n\nThank you for your purchase! Your membership has been activated.\n\nMembership Details:\n- Type: {enrollment_type}\n- Duration: {duration} days\n- Expires: {expiry_date}\n\nYou now have full access to all {enrollment_type} courses.\n\nBest regards,\nIELTS Online Team",

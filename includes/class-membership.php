@@ -36,7 +36,12 @@ class IELTS_MS_Membership {
             $base_date = $existing->end_date;
         }
         
-        $end_date = date('Y-m-d H:i:s', strtotime($base_date . ' +' . $duration_days . ' days'));
+        // For trials, duration_days is actually in hours
+        if ($is_trial) {
+            $end_date = date('Y-m-d H:i:s', strtotime($base_date . ' +' . $duration_days . ' hours'));
+        } else {
+            $end_date = date('Y-m-d H:i:s', strtotime($base_date . ' +' . $duration_days . ' days'));
+        }
         
         if ($existing) {
             // Update existing membership - keep original start_date

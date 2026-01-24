@@ -417,8 +417,8 @@ class IELTS_MS_Admin {
                     <tr>
                         <th scope="row">Trial Duration</th>
                         <td>
-                            <input type="number" min="1" max="30" name="trial_duration" value="<?php echo esc_attr(get_option('ielts_ms_trial_duration', 3)); ?>" class="small-text"> days
-                            <p class="description">Duration of the free trial (default: 3 days)</p>
+                            <input type="number" min="1" max="720" name="trial_duration" value="<?php echo esc_attr(get_option('ielts_ms_trial_duration', 72)); ?>" class="small-text"> hours
+                            <p class="description">Duration of the free trial in hours (default: 72 hours = 3 days)</p>
                         </td>
                     </tr>
                 </table>

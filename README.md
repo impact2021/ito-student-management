@@ -11,7 +11,7 @@ A complete membership and payment system for IELTS preparation courses with PayP
   - Course taxonomy for organizing by module
 
 - **Free Trial System**
-  - Configurable trial duration (default: 3 days)
+  - Configurable trial duration in hours (default: 72 hours = 3 days)
   - One trial per email address enforcement
   - Toggle trial availability on/off
   - Module selection during trial signup
@@ -102,7 +102,7 @@ All prices can be adjusted to suit your business needs.
 
 Configure free trial availability in **Membership > Settings** under the Trial Settings section:
 - **Enable Free Trial** - Toggle to enable/disable free trial for new users
-- **Trial Duration** - Set trial duration in days (default: 3 days)
+- **Trial Duration** - Set trial duration in hours (default: 72 hours = 3 days)
 
 **Note:** One trial per email address is automatically enforced. Users can select their course module (General Training, Academic, or Both) when signing up for the trial.
 

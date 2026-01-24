@@ -68,7 +68,15 @@ $new_membership = $pricing_options['new_90'];
                         <input type="radio" name="membership_type" value="trial" checked>
                         <span>
                             <strong><?php _e('Free Trial', 'ielts-membership-system'); ?></strong>
-                            <small><?php echo get_option('ielts_ms_trial_duration', 3); ?> <?php _e('days - Try before you buy', 'ielts-membership-system'); ?></small>
+                            <small><?php 
+                                $trial_hours = get_option('ielts_ms_trial_duration', 72);
+                                if ($trial_hours >= 24) {
+                                    $trial_days = floor($trial_hours / 24);
+                                    echo $trial_days . ' ' . ($trial_days == 1 ? __('day', 'ielts-membership-system') : __('days', 'ielts-membership-system'));
+                                } else {
+                                    echo $trial_hours . ' ' . ($trial_hours == 1 ? __('hour', 'ielts-membership-system') : __('hours', 'ielts-membership-system'));
+                                }
+                            ?> <?php _e('- Try before you buy', 'ielts-membership-system'); ?></small>
                         </span>
                     </label>
                     <label class="membership-type-option">
@@ -154,7 +162,7 @@ $new_membership = $pricing_options['new_90'];
             <input type="hidden" name="membership_plan" value="new_90">
             <input type="hidden" name="membership_amount" value="<?php echo $new_membership['price']; ?>">
             <input type="hidden" name="membership_days" value="<?php echo $new_membership['days']; ?>">
-            <input type="hidden" name="trial_duration" value="<?php echo get_option('ielts_ms_trial_duration', 3); ?>">
+            <input type="hidden" name="trial_duration" value="<?php echo get_option('ielts_ms_trial_duration', 72); ?>">
             
             <div class="ielts-ms-form-group">
                 <button type="submit" class="ielts-ms-btn ielts-ms-btn-primary">

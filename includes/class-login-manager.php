@@ -171,7 +171,7 @@ class IELTS_MS_Login_Manager {
         $password = $_POST['password'];
         $confirm_password = $_POST['confirm_password'];
         $enrollment_type = isset($_POST['enrollment_type']) ? sanitize_text_field($_POST['enrollment_type']) : 'both';
-        $trial_duration = isset($_POST['trial_duration']) ? intval($_POST['trial_duration']) : get_option('ielts_ms_trial_duration', 3);
+        $trial_duration = isset($_POST['trial_duration']) ? intval($_POST['trial_duration']) : get_option('ielts_ms_trial_duration', 72);
         
         // Validation
         if (empty($username) || empty($email) || empty($password)) {

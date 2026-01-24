@@ -31,7 +31,7 @@ This document summarizes the implementation of the enhanced IELTS membership sys
 - `assets/js/script.js` - Added trial form handling
 
 **Functionality:**
-- Configurable trial duration (default: 3 days)
+- Configurable trial duration in hours (default: 72 hours = 3 days)
 - One trial per email address enforcement
 - Trial usage tracked in dedicated database table
 - Admin can enable/disable trials via settings

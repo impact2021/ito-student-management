@@ -98,7 +98,7 @@ Custom post types created for managing courses in another repository:
 3. **Configure Trial Settings**
    - Go to Membership > Settings > Trial Settings
    - Check "Enable free trial for new users"
-   - Set trial duration (default: 3 days)
+   - Set trial duration in hours (default: 72 hours)
    - Save settings
 
 4. **Customize Email Templates** (Optional)
