@@ -1101,6 +1101,7 @@ class IELTS_MS_Admin {
     
     /**
      * Update user role based on membership status
+     * Preserves other user roles (like 'subscriber') while managing membership roles
      */
     private function update_user_membership_role($user_id, $is_active) {
         $user = get_userdata($user_id);
@@ -1109,16 +1110,24 @@ class IELTS_MS_Admin {
         }
         
         if ($is_active) {
-            // Grant active role
+            // Grant active role and remove expired role
             $user->remove_role('expired');
             if (!in_array('active', $user->roles)) {
                 $user->add_role('active');
             }
+            // Ensure subscriber role is maintained (WordPress default for registered users)
+            if (!in_array('subscriber', $user->roles)) {
+                $user->add_role('subscriber');
+            }
         } else {
-            // Grant expired role
+            // Grant expired role and remove active role
             $user->remove_role('active');
             if (!in_array('expired', $user->roles)) {
                 $user->add_role('expired');
+            }
+            // Ensure subscriber role is maintained (WordPress default for registered users)
+            if (!in_array('subscriber', $user->roles)) {
+                $user->add_role('subscriber');
             }
         }
     }
@@ -1169,19 +1178,22 @@ class IELTS_MS_Admin {
             
             $format = array('%s', '%d', '%s');
             
-            // Only update end_date if provided
+            // Determine which end_date to use for status calculation
+            $end_date_to_check = $converted_end_date ? $converted_end_date : $membership->end_date;
+            
+            // Update end_date if provided
             if ($converted_end_date) {
                 $update_data['end_date'] = $converted_end_date;
                 $format[] = '%s';
-                
-                // Update status based on new end date
-                $is_future = strtotime($converted_end_date) > time();
-                $update_data['status'] = $is_future ? 'active' : 'expired';
-                $format[] = '%s';
-                
-                // Update user role using helper method
-                $this->update_user_membership_role($user_id, $is_future);
             }
+            
+            // Always update status based on end date (new or existing)
+            $is_future = strtotime($end_date_to_check) > time();
+            $update_data['status'] = $is_future ? 'active' : 'expired';
+            $format[] = '%s';
+            
+            // Always update user role to ensure consistency
+            $this->update_user_membership_role($user_id, $is_future);
             
             $wpdb->update(
                 $table,

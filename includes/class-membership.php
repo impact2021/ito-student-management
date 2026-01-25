@@ -102,7 +102,7 @@ class IELTS_MS_Membership {
             );
         }
         
-        // Grant 'active' role to user
+        // Grant 'active' role to user while preserving existing roles
         $user = get_userdata($user_id);
         if ($user) {
             // Remove 'expired' role if present
@@ -110,6 +110,10 @@ class IELTS_MS_Membership {
             // Add 'active' role
             if (!in_array('active', $user->roles)) {
                 $user->add_role('active');
+            }
+            // Ensure subscriber role is maintained (WordPress default for registered users)
+            if (!in_array('subscriber', $user->roles)) {
+                $user->add_role('subscriber');
             }
         }
         
@@ -191,7 +195,7 @@ class IELTS_MS_Membership {
             array('%d', '%s')
         );
         
-        // Update user role to 'expired'
+        // Update user role to 'expired' while preserving existing roles
         $user = get_userdata($user_id);
         if ($user) {
             // Remove 'active' role if present
@@ -199,6 +203,10 @@ class IELTS_MS_Membership {
             // Add 'expired' role
             if (!in_array('expired', $user->roles)) {
                 $user->add_role('expired');
+            }
+            // Ensure subscriber role is maintained (WordPress default for registered users)
+            if (!in_array('subscriber', $user->roles)) {
+                $user->add_role('subscriber');
             }
         }
         
