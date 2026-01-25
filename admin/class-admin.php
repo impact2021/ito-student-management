@@ -9,15 +9,6 @@ if (!defined('ABSPATH')) {
 
 class IELTS_MS_Admin {
     
-    // Allowed enrollment types
-    const ENROLLMENT_TYPES = array('general_training', 'academic', 'both');
-    
-    // Enrollment type to module slug mapping
-    const MODULE_SLUG_MAP = array(
-        'general_training' => 'general-training',
-        'academic' => 'academic'
-    );
-    
     public function __construct() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
@@ -1131,7 +1122,7 @@ class IELTS_MS_Admin {
         $end_date = isset($_POST['membership_end_date']) ? sanitize_text_field($_POST['membership_end_date']) : '';
         
         // Validate enrollment type
-        if (!in_array($enrollment_type, self::ENROLLMENT_TYPES)) {
+        if (!IELTS_MS_Constants::is_valid_enrollment_type($enrollment_type)) {
             return;
         }
         
@@ -1139,7 +1130,8 @@ class IELTS_MS_Admin {
         $converted_end_date = '';
         if ($end_date) {
             $timestamp = strtotime($end_date);
-            if ($timestamp === false || $timestamp < 0) {
+            // Reject only invalid dates (false), allow all valid dates including historical ones
+            if ($timestamp === false) {
                 // Invalid date format, skip update
                 return;
             }

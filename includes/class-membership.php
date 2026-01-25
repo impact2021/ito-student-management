@@ -11,12 +11,6 @@ class IELTS_MS_Membership {
     
     private $db;
     
-    // Enrollment type to module slug mapping
-    const MODULE_SLUG_MAP = array(
-        'general_training' => 'general-training',
-        'academic' => 'academic'
-    );
-    
     public function __construct() {
         $this->db = new IELTS_MS_Database();
         
@@ -370,6 +364,18 @@ class IELTS_MS_Membership {
     }
     
     /**
+     * Add tax query to show only courses without module restrictions
+     */
+    private function add_unrestricted_courses_filter($query) {
+        $tax_query = $query->get('tax_query') ?: array();
+        $tax_query[] = array(
+            'taxonomy' => 'ielts_module',
+            'operator' => 'NOT EXISTS'
+        );
+        $query->set('tax_query', $tax_query);
+    }
+    
+    /**
      * Filter courses in queries based on user's membership type
      */
     public function filter_courses_by_membership($query) {
@@ -387,12 +393,7 @@ class IELTS_MS_Membership {
         // don't show any courses with module restrictions
         if (!is_user_logged_in()) {
             // Show only courses without module restrictions
-            $tax_query = $query->get('tax_query') ?: array();
-            $tax_query[] = array(
-                'taxonomy' => 'ielts_module',
-                'operator' => 'NOT EXISTS'
-            );
-            $query->set('tax_query', $tax_query);
+            $this->add_unrestricted_courses_filter($query);
             return $query;
         }
         
@@ -401,12 +402,7 @@ class IELTS_MS_Membership {
         
         // If no active membership, show only courses without module restrictions
         if (!$membership || $membership->status !== 'active' || strtotime($membership->end_date) <= time()) {
-            $tax_query = $query->get('tax_query') ?: array();
-            $tax_query[] = array(
-                'taxonomy' => 'ielts_module',
-                'operator' => 'NOT EXISTS'
-            );
-            $query->set('tax_query', $tax_query);
+            $this->add_unrestricted_courses_filter($query);
             return $query;
         }
         
@@ -418,10 +414,8 @@ class IELTS_MS_Membership {
         // Add tax query to filter by module - show courses with user's module OR no module
         $tax_query = $query->get('tax_query') ?: array();
         
-        // Map enrollment type to module slug using constant
-        $module_slug = isset(self::MODULE_SLUG_MAP[$membership->enrollment_type]) 
-            ? self::MODULE_SLUG_MAP[$membership->enrollment_type] 
-            : '';
+        // Map enrollment type to module slug using shared constant
+        $module_slug = IELTS_MS_Constants::get_module_slug($membership->enrollment_type);
         
         if ($module_slug) {
             $tax_query['relation'] = 'OR';
@@ -451,24 +445,23 @@ class IELTS_MS_Membership {
             return $posts;
         }
         
-        // Only filter single ielts_course posts
-        if (!$query->is_single() || $query->get('post_type') !== 'ielts_course') {
-            // Also check if it's a single post and one of the posts is ielts_course
-            if (!$query->is_single() || empty($posts)) {
-                return $posts;
+        // Only filter single posts
+        if (!$query->is_single() || empty($posts)) {
+            return $posts;
+        }
+        
+        // Check if any of the posts is an ielts_course
+        $has_course = false;
+        foreach ($posts as $post) {
+            if ($post->post_type === 'ielts_course') {
+                $has_course = true;
+                break;
             }
-            
-            $is_course = false;
-            foreach ($posts as $post) {
-                if ($post->post_type === 'ielts_course') {
-                    $is_course = true;
-                    break;
-                }
-            }
-            
-            if (!$is_course) {
-                return $posts;
-            }
+        }
+        
+        // If no course posts, don't filter
+        if (!$has_course) {
+            return $posts;
         }
         
         // Only filter for logged-in users
@@ -479,7 +472,7 @@ class IELTS_MS_Membership {
         $user_id = get_current_user_id();
         $has_access = true;
         
-        // Check access for each post
+        // Check access for each course post
         foreach ($posts as $key => $post) {
             if ($post->post_type === 'ielts_course') {
                 if (!$this->has_course_access($user_id, $post->ID)) {

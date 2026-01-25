@@ -26,6 +26,7 @@ define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
 
 // Include required files
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-constants.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-database.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-membership.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-email-manager.php';
