@@ -62,7 +62,7 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                     <?php if ($has_membership): ?>
                         <?php 
                         // Check if this is a trial membership
-                        $is_trial = $user_membership && $user_membership->is_trial == 1;
+                        $is_trial = $user_membership && (int)$user_membership->is_trial === 1;
                         ?>
                         <div class="ielts-ms-membership-card active">
                             <div class="membership-status">
