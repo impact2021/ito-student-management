@@ -367,8 +367,12 @@ function ielts_ms_enqueue_assets() {
         $user_membership = $membership->get_user_membership($user_id);
         
         if ($user_membership && $user_membership->status === 'active' && $user_membership->is_trial === 1) {
-            $trial_data['isTrial'] = true;
-            $trial_data['endTime'] = strtotime($user_membership->end_date);
+            $end_timestamp = strtotime($user_membership->end_date);
+            // Only show timer if trial hasn't expired yet
+            if ($end_timestamp > time()) {
+                $trial_data['isTrial'] = true;
+                $trial_data['endTime'] = $end_timestamp;
+            }
         }
     }
     
