@@ -12,6 +12,19 @@ class IELTS_MS_Admin {
     public function __construct() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
+        
+        // Add custom columns to users list
+        add_filter('manage_users_columns', array($this, 'add_user_columns'));
+        add_filter('manage_users_custom_column', array($this, 'display_user_column'), 10, 3);
+        
+        // Add membership fields to user profile
+        add_action('show_user_profile', array($this, 'add_membership_fields'));
+        add_action('edit_user_profile', array($this, 'add_membership_fields'));
+        add_action('personal_options_update', array($this, 'save_membership_fields'));
+        add_action('edit_user_profile_update', array($this, 'save_membership_fields'));
+        
+        // Hide admin bar for non-admin users
+        add_action('after_setup_theme', array($this, 'hide_admin_bar_for_students'));
     }
     
     /**
@@ -900,5 +913,289 @@ class IELTS_MS_Admin {
             </form>
         </div>
         <?php
+    }
+    
+    /**
+     * Add custom columns to users list
+     */
+    public function add_user_columns($columns) {
+        // Add membership status column after email
+        $new_columns = array();
+        foreach ($columns as $key => $value) {
+            $new_columns[$key] = $value;
+            if ($key === 'email') {
+                $new_columns['membership_status'] = __('Membership Status', 'ielts-membership-system');
+            }
+        }
+        return $new_columns;
+    }
+    
+    /**
+     * Display custom column content
+     */
+    public function display_user_column($value, $column_name, $user_id) {
+        if ($column_name === 'membership_status') {
+            $membership_obj = new IELTS_MS_Membership();
+            $membership = $membership_obj->get_user_membership($user_id);
+            
+            if (!$membership) {
+                return '<span style="color: #999;">No Membership</span>';
+            }
+            
+            // Check if membership is active and not expired
+            $is_active = $membership->status === 'active' && strtotime($membership->end_date) > time();
+            
+            if (!$is_active) {
+                return '<span style="color: #d63638; font-weight: 600;">Expired</span>';
+            }
+            
+            // Build status text
+            $status_parts = array();
+            
+            // Add trial/full indicator
+            if ($membership->is_trial == 1) {
+                $status_parts[] = 'Free Trial';
+            } else {
+                $status_parts[] = 'Full Membership';
+            }
+            
+            // Add enrollment type
+            if ($membership->enrollment_type === 'general_training') {
+                $status_parts[] = 'General Training';
+            } elseif ($membership->enrollment_type === 'academic') {
+                $status_parts[] = 'Academic';
+            } elseif ($membership->enrollment_type === 'both') {
+                $status_parts[] = 'General Training + Academic';
+            }
+            
+            $status_text = implode(' - ', $status_parts);
+            
+            // Calculate time remaining
+            $end_timestamp = strtotime($membership->end_date);
+            $now = time();
+            $remaining_seconds = $end_timestamp - $now;
+            
+            if ($membership->is_trial == 1) {
+                // For trials, show hours and minutes
+                $hours = floor($remaining_seconds / 3600);
+                $minutes = floor(($remaining_seconds % 3600) / 60);
+                $time_remaining = sprintf('%dh %dm remaining', $hours, $minutes);
+            } else {
+                // For paid memberships, show days
+                $days = ceil($remaining_seconds / 86400);
+                $time_remaining = sprintf('%d days remaining', $days);
+            }
+            
+            return sprintf(
+                '<strong style="color: #2271b1;">%s</strong><br><small style="color: #666;">%s</small>',
+                esc_html($status_text),
+                esc_html($time_remaining)
+            );
+        }
+        
+        return $value;
+    }
+    
+    /**
+     * Add membership fields to user profile
+     */
+    public function add_membership_fields($user) {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
+        $membership_obj = new IELTS_MS_Membership();
+        $membership = $membership_obj->get_user_membership($user->ID);
+        
+        $enrollment_type = $membership ? $membership->enrollment_type : 'both';
+        $end_date = $membership ? $membership->end_date : '';
+        $is_trial = $membership ? $membership->is_trial : 0;
+        $status = $membership ? $membership->status : '';
+        
+        // Convert end_date to local format for input (Y-m-d\TH:i)
+        $end_date_formatted = '';
+        if ($end_date) {
+            $end_date_formatted = date('Y-m-d\TH:i', strtotime($end_date));
+        }
+        
+        ?>
+        <h3><?php _e('Membership Management', 'ielts-membership-system'); ?></h3>
+        <table class="form-table">
+            <tr>
+                <th><label for="membership_type"><?php _e('Membership Type', 'ielts-membership-system'); ?></label></th>
+                <td>
+                    <select name="membership_type" id="membership_type">
+                        <option value="general_training" <?php selected($enrollment_type, 'general_training'); ?>>
+                            <?php _e('General Training', 'ielts-membership-system'); ?>
+                        </option>
+                        <option value="academic" <?php selected($enrollment_type, 'academic'); ?>>
+                            <?php _e('Academic', 'ielts-membership-system'); ?>
+                        </option>
+                        <option value="both" <?php selected($enrollment_type, 'both'); ?>>
+                            <?php _e('Both (General Training + Academic)', 'ielts-membership-system'); ?>
+                        </option>
+                    </select>
+                    <p class="description">
+                        <?php _e('Select the type of courses this user can access.', 'ielts-membership-system'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="membership_end_date"><?php _e('Membership Expiry Date', 'ielts-membership-system'); ?></label></th>
+                <td>
+                    <input type="datetime-local" 
+                           name="membership_end_date" 
+                           id="membership_end_date" 
+                           value="<?php echo esc_attr($end_date_formatted); ?>"
+                           class="regular-text">
+                    <p class="description">
+                        <?php _e('Set when this user\'s membership will expire. Leave empty to keep current expiry.', 'ielts-membership-system'); ?>
+                        <?php if ($membership): ?>
+                            <br><strong><?php _e('Current expiry:', 'ielts-membership-system'); ?></strong> 
+                            <?php echo esc_html(date('F j, Y g:i A', strtotime($end_date))); ?>
+                        <?php endif; ?>
+                    </p>
+                </td>
+            </tr>
+            <?php if ($membership): ?>
+            <tr>
+                <th><?php _e('Current Status', 'ielts-membership-system'); ?></th>
+                <td>
+                    <?php
+                    $is_active = $status === 'active' && strtotime($end_date) > time();
+                    if ($is_active) {
+                        echo '<span style="color: #2271b1; font-weight: 600;">✓ Active</span>';
+                        if ($is_trial == 1) {
+                            echo ' <span style="color: #999;">(Free Trial)</span>';
+                        }
+                    } else {
+                        echo '<span style="color: #d63638; font-weight: 600;">✗ Expired</span>';
+                    }
+                    ?>
+                </td>
+            </tr>
+            <?php endif; ?>
+        </table>
+        <?php
+    }
+    
+    /**
+     * Update user role based on membership status
+     */
+    private function update_user_membership_role($user_id, $is_active) {
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return;
+        }
+        
+        if ($is_active) {
+            // Grant active role
+            $user->remove_role('expired');
+            if (!in_array('active', $user->roles)) {
+                $user->add_role('active');
+            }
+        } else {
+            // Grant expired role
+            $user->remove_role('active');
+            if (!in_array('expired', $user->roles)) {
+                $user->add_role('expired');
+            }
+        }
+    }
+    
+    /**
+     * Save membership fields from user profile
+     */
+    public function save_membership_fields($user_id) {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        
+        global $wpdb;
+        $table = IELTS_MS_Database::get_memberships_table();
+        
+        $membership_obj = new IELTS_MS_Membership();
+        $membership = $membership_obj->get_user_membership($user_id);
+        
+        // Get values from form
+        $enrollment_type = isset($_POST['membership_type']) ? sanitize_text_field($_POST['membership_type']) : '';
+        $end_date = isset($_POST['membership_end_date']) ? sanitize_text_field($_POST['membership_end_date']) : '';
+        
+        // Validate enrollment type
+        if (!IELTS_MS_Constants::is_valid_enrollment_type($enrollment_type)) {
+            return;
+        }
+        
+        // Convert datetime-local format to MySQL datetime
+        $converted_end_date = '';
+        if ($end_date) {
+            $timestamp = strtotime($end_date);
+            // Reject only invalid dates (false), allow all valid dates including historical ones
+            if ($timestamp === false) {
+                // Invalid date format, skip update
+                return;
+            }
+            $converted_end_date = date('Y-m-d H:i:s', $timestamp);
+        }
+        
+        if ($membership) {
+            // Update existing membership
+            $update_data = array(
+                'enrollment_type' => $enrollment_type,
+                'updated_date' => current_time('mysql')
+            );
+            
+            $format = array('%s', '%s');
+            
+            // Only update end_date if provided
+            if ($converted_end_date) {
+                $update_data['end_date'] = $converted_end_date;
+                $format[] = '%s';
+                
+                // Update status based on new end date
+                $is_future = strtotime($converted_end_date) > time();
+                $update_data['status'] = $is_future ? 'active' : 'expired';
+                $format[] = '%s';
+                
+                // Update user role using helper method
+                $this->update_user_membership_role($user_id, $is_future);
+            }
+            
+            $wpdb->update(
+                $table,
+                $update_data,
+                array('id' => $membership->id),
+                $format,
+                array('%d')
+            );
+        } elseif ($converted_end_date) {
+            // Create new membership only if end_date is provided
+            $is_active = strtotime($converted_end_date) > time();
+            
+            $wpdb->insert(
+                $table,
+                array(
+                    'user_id' => $user_id,
+                    'status' => $is_active ? 'active' : 'expired',
+                    'enrollment_type' => $enrollment_type,
+                    'is_trial' => 0,
+                    'start_date' => current_time('mysql'),
+                    'end_date' => $converted_end_date
+                ),
+                array('%d', '%s', '%s', '%d', '%s', '%s')
+            );
+            
+            // Update user role using helper method
+            $this->update_user_membership_role($user_id, $is_active);
+        }
+    }
+    
+    /**
+     * Hide WordPress admin bar for non-admin users (students)
+     */
+    public function hide_admin_bar_for_students() {
+        if (!current_user_can('manage_options')) {
+            show_admin_bar(false);
+        }
     }
 }

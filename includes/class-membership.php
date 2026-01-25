@@ -16,6 +16,12 @@ class IELTS_MS_Membership {
         
         // Hook into IELTS Course Manager enrollment check
         add_filter('ielts_cm_has_course_access', array($this, 'check_course_access'), 10, 2);
+        
+        // Filter courses based on membership type
+        add_filter('pre_get_posts', array($this, 'filter_courses_by_membership'));
+        
+        // Filter individual course access
+        add_filter('the_posts', array($this, 'filter_single_course_access'), 10, 2);
     }
     
     /**
@@ -355,5 +361,137 @@ class IELTS_MS_Membership {
         }
         
         return false;
+    }
+    
+    /**
+     * Add tax query to show only courses without module restrictions
+     */
+    private function add_unrestricted_courses_filter($query) {
+        $tax_query = $query->get('tax_query') ?: array();
+        $tax_query[] = array(
+            'taxonomy' => 'ielts_module',
+            'operator' => 'NOT EXISTS'
+        );
+        $query->set('tax_query', $tax_query);
+    }
+    
+    /**
+     * Filter courses in queries based on user's membership type
+     */
+    public function filter_courses_by_membership($query) {
+        // Only filter on frontend, for course queries, and for non-admin users
+        if (is_admin() || !$query->is_main_query() || current_user_can('manage_options')) {
+            return $query;
+        }
+        
+        // Only filter ielts_course post type
+        if ($query->get('post_type') !== 'ielts_course' && !$query->is_post_type_archive('ielts_course')) {
+            return $query;
+        }
+        
+        // For non-logged-in users or users without active memberships, 
+        // don't show any courses with module restrictions
+        if (!is_user_logged_in()) {
+            // Show only courses without module restrictions
+            $this->add_unrestricted_courses_filter($query);
+            return $query;
+        }
+        
+        $user_id = get_current_user_id();
+        $membership = $this->get_user_membership($user_id);
+        
+        // If no active membership, show only courses without module restrictions
+        if (!$membership || $membership->status !== 'active' || strtotime($membership->end_date) <= time()) {
+            $this->add_unrestricted_courses_filter($query);
+            return $query;
+        }
+        
+        // If membership is 'both', show all courses
+        if ($membership->enrollment_type === 'both') {
+            return $query;
+        }
+        
+        // Add tax query to filter by module - show courses with user's module OR no module
+        $tax_query = $query->get('tax_query') ?: array();
+        
+        // Map enrollment type to module slug using shared constant
+        $module_slug = IELTS_MS_Constants::get_module_slug($membership->enrollment_type);
+        
+        if ($module_slug) {
+            $tax_query['relation'] = 'OR';
+            $tax_query[] = array(
+                'taxonomy' => 'ielts_module',
+                'field' => 'slug',
+                'terms' => $module_slug,
+                'operator' => 'IN'
+            );
+            $tax_query[] = array(
+                'taxonomy' => 'ielts_module',
+                'operator' => 'NOT EXISTS'
+            );
+            
+            $query->set('tax_query', $tax_query);
+        }
+        
+        return $query;
+    }
+    
+    /**
+     * Filter single course access based on membership
+     */
+    public function filter_single_course_access($posts, $query) {
+        // Only filter on frontend single course views for non-admins
+        if (is_admin() || !$query->is_main_query() || current_user_can('manage_options')) {
+            return $posts;
+        }
+        
+        // Only filter single posts
+        if (!$query->is_single() || empty($posts)) {
+            return $posts;
+        }
+        
+        // Check if any of the posts is an ielts_course
+        $has_course = false;
+        foreach ($posts as $post) {
+            if ($post->post_type === 'ielts_course') {
+                $has_course = true;
+                break;
+            }
+        }
+        
+        // If no course posts, don't filter
+        if (!$has_course) {
+            return $posts;
+        }
+        
+        // Only filter for logged-in users
+        if (!is_user_logged_in()) {
+            return $posts;
+        }
+        
+        $user_id = get_current_user_id();
+        $has_access = true;
+        
+        // Check access for each course post
+        foreach ($posts as $key => $post) {
+            if ($post->post_type === 'ielts_course') {
+                if (!$this->has_course_access($user_id, $post->ID)) {
+                    // Remove post from results
+                    unset($posts[$key]);
+                    $has_access = false;
+                }
+            }
+        }
+        
+        // Reindex array and check if empty
+        $posts = array_values($posts);
+        
+        // If no posts remain after filtering, trigger 404
+        if (!$has_access && empty($posts)) {
+            $query->set_404();
+            status_header(404);
+        }
+        
+        return $posts;
     }
 }
