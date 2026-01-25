@@ -300,6 +300,8 @@ class IELTS_MS_Membership {
      * Check if user has access to specific course based on enrollment type
      */
     public function has_course_access($user_id, $course_id) {
+        global $wpdb;
+        
         // Admins always have access
         if (user_can($user_id, 'manage_options')) {
             return true;
@@ -312,6 +314,24 @@ class IELTS_MS_Membership {
         
         $membership = $this->get_user_membership($user_id);
         
+        // Get user's enrollment type
+        $enrollment_type = $membership->enrollment_type;
+        
+        // First, check if there's specific course configuration for this membership type
+        $table = IELTS_MS_Database::get_membership_courses_table();
+        $configured_courses = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT course_id FROM $table WHERE membership_type = %s",
+                $enrollment_type
+            )
+        );
+        
+        // If courses are configured for this membership type, check if this course is in the list
+        if (!empty($configured_courses)) {
+            return in_array((int)$course_id, array_map('intval', $configured_courses), true);
+        }
+        
+        // Fall back to module-based access if no specific configuration exists
         // If enrollment type is 'both', user has access to all courses
         if ($membership->enrollment_type === 'both') {
             return true;

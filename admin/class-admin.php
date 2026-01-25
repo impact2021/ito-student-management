@@ -57,6 +57,15 @@ class IELTS_MS_Admin {
         
         add_submenu_page(
             'ielts-membership',
+            'Course Access',
+            'Course Access',
+            'manage_options',
+            'ielts-membership-course-access',
+            array($this, 'course_access_page')
+        );
+        
+        add_submenu_page(
+            'ielts-membership',
             'Documentation',
             'Documentation',
             'manage_options',
@@ -96,6 +105,7 @@ class IELTS_MS_Admin {
         // Trial settings
         register_setting('ielts_ms_settings', 'ielts_ms_trial_enabled');
         register_setting('ielts_ms_settings', 'ielts_ms_trial_duration');
+        register_setting('ielts_ms_settings', 'ielts_ms_trial_upgrade_link');
         
         // Email settings
         register_setting('ielts_ms_settings', 'ielts_ms_email_from_name');
@@ -168,6 +178,13 @@ class IELTS_MS_Admin {
             update_option('ielts_ms_trial_enabled', isset($_POST['trial_enabled']));
             if (isset($_POST['trial_duration'])) {
                 update_option('ielts_ms_trial_duration', intval($_POST['trial_duration']));
+            }
+            if (isset($_POST['trial_upgrade_link'])) {
+                $upgrade_link = esc_url_raw($_POST['trial_upgrade_link']);
+                // Validate URL format
+                if (empty($upgrade_link) || filter_var($upgrade_link, FILTER_VALIDATE_URL)) {
+                    update_option('ielts_ms_trial_upgrade_link', $upgrade_link);
+                }
             }
             
             // Update email settings
@@ -419,6 +436,13 @@ class IELTS_MS_Admin {
                         <td>
                             <input type="number" min="1" max="720" name="trial_duration" value="<?php echo esc_attr(get_option('ielts_ms_trial_duration', 72)); ?>" class="small-text"> hours
                             <p class="description">Duration of the free trial in hours (default: 72 hours = 3 days)</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Upgrade Link</th>
+                        <td>
+                            <input type="url" name="trial_upgrade_link" value="<?php echo esc_attr(get_option('ielts_ms_trial_upgrade_link', '')); ?>" class="regular-text" placeholder="https://example.com/account/#extend-course">
+                            <p class="description">URL for the "Upgrade to Full Membership" link in the trial timer. This should point to the account page with the 'Extend my course' tab (e.g., add #extend-course to your account page URL).</p>
                         </td>
                     </tr>
                 </table>
@@ -726,6 +750,154 @@ class IELTS_MS_Admin {
                     <li><strong>Payments:</strong> Membership → Payments - Track all payment transactions</li>
                 </ul>
             </div>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Course Access Configuration page
+     */
+    public function course_access_page() {
+        global $wpdb;
+        
+        // Handle form submission
+        if (isset($_POST['submit_course_access'])) {
+            check_admin_referer('ielts_ms_course_access_nonce');
+            
+            $table = IELTS_MS_Database::get_membership_courses_table();
+            $membership_types = array('general_training', 'academic', 'both');
+            
+            // Clear existing configurations using prepared statement for safety
+            foreach ($membership_types as $type) {
+                $wpdb->delete($table, array('membership_type' => $type), array('%s'));
+            }
+            
+            // Save new configurations
+            foreach ($membership_types as $type) {
+                $field_name = 'courses_' . $type;
+                if (isset($_POST[$field_name]) && is_array($_POST[$field_name])) {
+                    foreach ($_POST[$field_name] as $course_id) {
+                        $course_id = intval($course_id);
+                        $wpdb->insert(
+                            $table,
+                            array(
+                                'membership_type' => $type,
+                                'course_id' => $course_id
+                            ),
+                            array('%s', '%d')
+                        );
+                    }
+                }
+            }
+            
+            echo '<div class="notice notice-success"><p>Course access configuration saved successfully!</p></div>';
+        }
+        
+        // Get all courses
+        $courses = get_posts(array(
+            'post_type' => 'ielts_course',
+            'posts_per_page' => -1,
+            'orderby' => 'title',
+            'order' => 'ASC',
+            'post_status' => 'publish'
+        ));
+        
+        // Get current configuration
+        $table = IELTS_MS_Database::get_membership_courses_table();
+        $configured_courses = array(
+            'general_training' => array(),
+            'academic' => array(),
+            'both' => array()
+        );
+        
+        $results = $wpdb->get_results("SELECT membership_type, course_id FROM $table");
+        foreach ($results as $row) {
+            if (isset($configured_courses[$row->membership_type])) {
+                $configured_courses[$row->membership_type][] = $row->course_id;
+            }
+        }
+        
+        ?>
+        <div class="wrap">
+            <h1>Course Access Configuration</h1>
+            <p>Configure which courses are accessible for each membership type. If no courses are selected for a membership type, all courses in that module will be accessible (default behavior).</p>
+            
+            <form method="post" action="">
+                <?php wp_nonce_field('ielts_ms_course_access_nonce'); ?>
+                
+                <?php if (empty($courses)): ?>
+                    <div class="notice notice-warning">
+                        <p>No courses found. Please create some courses first using the IELTS Course custom post type.</p>
+                    </div>
+                <?php else: ?>
+                    
+                    <h2>General Training Membership</h2>
+                    <p class="description">Select which courses are included in the General Training membership.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Available Courses</th>
+                            <td>
+                                <?php foreach ($courses as $course): ?>
+                                    <label style="display: block; margin-bottom: 8px;">
+                                        <input type="checkbox" 
+                                               name="courses_general_training[]" 
+                                               value="<?php echo esc_attr($course->ID); ?>"
+                                               <?php checked(in_array($course->ID, $configured_courses['general_training'])); ?>>
+                                        <?php echo esc_html($course->post_title); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <hr style="margin: 30px 0;">
+                    
+                    <h2>Academic Membership</h2>
+                    <p class="description">Select which courses are included in the Academic membership.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Available Courses</th>
+                            <td>
+                                <?php foreach ($courses as $course): ?>
+                                    <label style="display: block; margin-bottom: 8px;">
+                                        <input type="checkbox" 
+                                               name="courses_academic[]" 
+                                               value="<?php echo esc_attr($course->ID); ?>"
+                                               <?php checked(in_array($course->ID, $configured_courses['academic'])); ?>>
+                                        <?php echo esc_html($course->post_title); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <hr style="margin: 30px 0;">
+                    
+                    <h2>Both (General Training + Academic) Membership</h2>
+                    <p class="description">Select which courses are included in the "Both" membership type (typically all courses).</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Available Courses</th>
+                            <td>
+                                <?php foreach ($courses as $course): ?>
+                                    <label style="display: block; margin-bottom: 8px;">
+                                        <input type="checkbox" 
+                                               name="courses_both[]" 
+                                               value="<?php echo esc_attr($course->ID); ?>"
+                                               <?php checked(in_array($course->ID, $configured_courses['both'])); ?>>
+                                        <?php echo esc_html($course->post_title); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <p class="submit">
+                        <input type="submit" name="submit_course_access" class="button button-primary" value="Save Course Access Configuration">
+                    </p>
+                    
+                <?php endif; ?>
+            </form>
         </div>
         <?php
     }

@@ -15,7 +15,24 @@ jQuery(document).ready(function($) {
         // Add active class to clicked tab and corresponding pane
         $(this).addClass('active');
         $('#' + targetTab).addClass('active');
+        
+        // Update URL hash without jumping
+        if (history.pushState) {
+            history.pushState(null, null, '#' + targetTab);
+        }
     });
+    
+    // Check for hash in URL on page load and switch to that tab
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1); // Remove the # character
+        // Sanitize hash to prevent selector injection
+        const sanitizedHash = hash.replace(/[^a-zA-Z0-9_-]/g, '');
+        const $targetTab = $('.ielts-ms-tab-link[data-tab="' + sanitizedHash + '"]');
+        
+        if ($targetTab.length) {
+            $targetTab.click();
+        }
+    }
     
     // Initialize Stripe if enabled
     let stripe = null;
@@ -898,5 +915,64 @@ jQuery(document).ready(function($) {
                 alert('An error occurred. Please try again.');
             }
         });
+    }
+    
+    // Trial Timer Functionality
+    if (ieltsMS.trial && ieltsMS.trial.isTrial && ieltsMS.trial.endTime) {
+        let timerInterval;
+        
+        // Validate endTime
+        const endTime = Number(ieltsMS.trial.endTime);
+        if (isNaN(endTime) || endTime <= 0) {
+            console.error('Invalid trial end time');
+            return;
+        }
+        
+        // Create and append the timer HTML using DOM methods for safety
+        const timerDiv = $('<div>').addClass('ielts-ms-trial-timer');
+        const headerDiv = $('<div>').addClass('timer-header').text('Free Trial Time Remaining');
+        const displayDiv = $('<div>').addClass('timer-display').attr('id', 'trial-countdown').text('--:--');
+        
+        timerDiv.append(headerDiv).append(displayDiv);
+        
+        if (ieltsMS.trial.upgradeLink) {
+            const upgradeLink = $('<a>')
+                .addClass('timer-upgrade-link')
+                .attr('href', ieltsMS.trial.upgradeLink)
+                .text('Upgrade to Full Membership');
+            timerDiv.append(upgradeLink);
+        }
+        
+        $('body').append(timerDiv);
+        
+        // Function to update the timer
+        function updateTrialTimer() {
+            const now = Math.floor(Date.now() / 1000); // Current time in seconds
+            const remaining = endTime - now;
+            
+            if (remaining <= 0) {
+                // Trial has expired
+                $('#trial-countdown').text('Expired').addClass('warning');
+                clearInterval(timerInterval);
+                return;
+            }
+            
+            // Calculate hours and minutes
+            const hours = Math.floor(remaining / 3600);
+            const minutes = Math.floor((remaining % 3600) / 60);
+            
+            // Format the display
+            const displayText = hours + 'h ' + minutes + 'm';
+            $('#trial-countdown').text(displayText);
+            
+            // Add warning class if less than 2 hours remaining
+            if (remaining < 7200) { // 2 hours
+                $('#trial-countdown').addClass('warning');
+            }
+        }
+        
+        // Update immediately and then every minute
+        updateTrialTimer();
+        timerInterval = setInterval(updateTrialTimer, 60000); // Update every minute
     }
 });
