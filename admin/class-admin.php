@@ -171,7 +171,11 @@ class IELTS_MS_Admin {
                 update_option('ielts_ms_trial_duration', intval($_POST['trial_duration']));
             }
             if (isset($_POST['trial_upgrade_link'])) {
-                update_option('ielts_ms_trial_upgrade_link', esc_url_raw($_POST['trial_upgrade_link']));
+                $upgrade_link = esc_url_raw($_POST['trial_upgrade_link']);
+                // Validate URL format
+                if (empty($upgrade_link) || filter_var($upgrade_link, FILTER_VALIDATE_URL)) {
+                    update_option('ielts_ms_trial_upgrade_link', $upgrade_link);
+                }
             }
             
             // Update email settings

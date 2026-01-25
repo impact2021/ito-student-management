@@ -366,7 +366,7 @@ function ielts_ms_enqueue_assets() {
         $membership = new IELTS_MS_Membership();
         $user_membership = $membership->get_user_membership($user_id);
         
-        if ($user_membership && $user_membership->status === 'active' && $user_membership->is_trial == 1) {
+        if ($user_membership && $user_membership->status === 'active' && $user_membership->is_trial === 1) {
             $trial_data['isTrial'] = true;
             $trial_data['endTime'] = strtotime($user_membership->end_date);
         }
