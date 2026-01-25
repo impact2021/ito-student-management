@@ -60,17 +60,65 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                     <h3><?php _e('Membership Status', 'ielts-membership-system'); ?></h3>
                     
                     <?php if ($has_membership): ?>
+                        <?php 
+                        // Check if this is a trial membership
+                        $is_trial = $user_membership && $user_membership->is_trial == 1;
+                        ?>
                         <div class="ielts-ms-membership-card active">
                             <div class="membership-status">
-                                <span class="status-badge active"><?php _e('Active', 'ielts-membership-system'); ?></span>
+                                <span class="status-badge active">
+                                    <?php echo $is_trial ? __('Free Trial Active', 'ielts-membership-system') : __('Active', 'ielts-membership-system'); ?>
+                                </span>
                             </div>
                             <div class="membership-details">
-                                <p><strong><?php _e('Access Expires:', 'ielts-membership-system'); ?></strong> 
-                                    <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
-                                </p>
-                                <p><strong><?php _e('Days Remaining:', 'ielts-membership-system'); ?></strong> 
-                                    <?php echo esc_html($days_remaining); ?>
-                                </p>
+                                <?php if ($is_trial): ?>
+                                    <?php
+                                    // Calculate hours and minutes remaining for trial
+                                    $end_timestamp = strtotime($user_membership->end_date);
+                                    $now = time();
+                                    $remaining_seconds = $end_timestamp - $now;
+                                    
+                                    // Handle expired trial
+                                    if ($remaining_seconds <= 0) {
+                                        $time_display = __('expired', 'ielts-membership-system');
+                                    } else {
+                                        $hours_remaining = floor($remaining_seconds / 3600);
+                                        $minutes_remaining = floor(($remaining_seconds % 3600) / 60);
+                                        
+                                        if ($hours_remaining > 0) {
+                                            $time_display = sprintf('%d %s', 
+                                                $hours_remaining, 
+                                                _n('hour', 'hours', $hours_remaining, 'ielts-membership-system')
+                                            );
+                                            // Only add minutes if greater than 0
+                                            if ($minutes_remaining > 0) {
+                                                $time_display .= sprintf(' %d %s', 
+                                                    $minutes_remaining,
+                                                    _n('minute', 'minutes', $minutes_remaining, 'ielts-membership-system')
+                                                );
+                                            }
+                                        } else {
+                                            $time_display = sprintf('%d %s', 
+                                                $minutes_remaining,
+                                                _n('minute', 'minutes', $minutes_remaining, 'ielts-membership-system')
+                                            );
+                                        }
+                                    }
+                                    ?>
+                                    <p><?php printf(__('You have %s left in your membership.', 'ielts-membership-system'), '<strong>' . esc_html($time_display) . '</strong>'); ?></p>
+                                    <p>
+                                        <a href="#extend-course" class="ielts-ms-btn ielts-ms-btn-primary" onclick="jQuery('.ielts-ms-tab-link[data-tab=\'extend-course\']').click(); return false;">
+                                            <?php _e('Click here to become a full member', 'ielts-membership-system'); ?>
+                                        </a>
+                                    </p>
+                                <?php else: ?>
+                                    <p><strong><?php _e('Access Expires:', 'ielts-membership-system'); ?></strong> 
+                                        <?php echo esc_html(date('F j, Y', strtotime($user_membership->end_date))); ?>
+                                    </p>
+                                    <p><strong><?php _e('Days Remaining:', 'ielts-membership-system'); ?></strong> 
+                                        <?php echo esc_html($days_remaining); ?>
+                                    </p>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php elseif ($is_expired): ?>

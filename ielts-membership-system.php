@@ -3,7 +3,7 @@
  * Plugin Name: IELTS Membership System
  * Plugin URI: https://www.ieltstestonline.com/
  * Description: Membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
- * Version: 10.0
+ * Version: 10.1
  * Author: IELTStestONLINE
  * Author URI: https://www.ieltstestonline.com/
  * Text Domain: ielts-membership-system
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IELTS_MS_VERSION', '10.0');
+define('IELTS_MS_VERSION', '10.1');
 define('IELTS_MS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
@@ -366,7 +366,7 @@ function ielts_ms_enqueue_assets() {
         $membership = new IELTS_MS_Membership();
         $user_membership = $membership->get_user_membership($user_id);
         
-        if ($user_membership && $user_membership->status === 'active' && $user_membership->is_trial === 1) {
+        if ($user_membership && $user_membership->status === 'active' && $user_membership->is_trial == 1) {
             $end_timestamp = strtotime($user_membership->end_date);
             // Only show timer if trial hasn't expired yet
             if ($end_timestamp > time()) {
