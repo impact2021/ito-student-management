@@ -328,7 +328,7 @@ class IELTS_MS_Membership {
         
         // If courses are configured for this membership type, check if this course is in the list
         if (!empty($configured_courses)) {
-            return in_array($course_id, $configured_courses);
+            return in_array((int)$course_id, array_map('intval', $configured_courses), true);
         }
         
         // Fall back to module-based access if no specific configuration exists

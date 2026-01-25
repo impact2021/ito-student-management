@@ -767,8 +767,10 @@ class IELTS_MS_Admin {
             $table = IELTS_MS_Database::get_membership_courses_table();
             $membership_types = array('general_training', 'academic', 'both');
             
-            // Clear existing configurations
-            $wpdb->query("DELETE FROM $table");
+            // Clear existing configurations using prepared statement for safety
+            foreach ($membership_types as $type) {
+                $wpdb->delete($table, array('membership_type' => $type), array('%s'));
+            }
             
             // Save new configurations
             foreach ($membership_types as $type) {

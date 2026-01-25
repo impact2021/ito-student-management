@@ -921,22 +921,33 @@ jQuery(document).ready(function($) {
     if (ieltsMS.trial && ieltsMS.trial.isTrial && ieltsMS.trial.endTime) {
         let timerInterval;
         
-        // Create and append the timer HTML (upgrade link already sanitized server-side)
-        const upgradeLink = ieltsMS.trial.upgradeLink ? 
-            '<a href="' + ieltsMS.trial.upgradeLink + '" class="timer-upgrade-link">Upgrade to Full Membership</a>' : '';
+        // Validate endTime
+        const endTime = Number(ieltsMS.trial.endTime);
+        if (isNaN(endTime) || endTime <= 0) {
+            console.error('Invalid trial end time');
+            return;
+        }
         
-        const timerHtml = 
-            '<div class="ielts-ms-trial-timer">' +
-                '<div class="timer-header">Free Trial Time Remaining</div>' +
-                '<div class="timer-display" id="trial-countdown">--:--</div>' +
-                upgradeLink +
-            '</div>';
-        $('body').append(timerHtml);
+        // Create and append the timer HTML using DOM methods for safety
+        const timerDiv = $('<div>').addClass('ielts-ms-trial-timer');
+        const headerDiv = $('<div>').addClass('timer-header').text('Free Trial Time Remaining');
+        const displayDiv = $('<div>').addClass('timer-display').attr('id', 'trial-countdown').text('--:--');
+        
+        timerDiv.append(headerDiv).append(displayDiv);
+        
+        if (ieltsMS.trial.upgradeLink) {
+            const upgradeLink = $('<a>')
+                .addClass('timer-upgrade-link')
+                .attr('href', ieltsMS.trial.upgradeLink)
+                .text('Upgrade to Full Membership');
+            timerDiv.append(upgradeLink);
+        }
+        
+        $('body').append(timerDiv);
         
         // Function to update the timer
         function updateTrialTimer() {
             const now = Math.floor(Date.now() / 1000); // Current time in seconds
-            const endTime = Number(ieltsMS.trial.endTime);
             const remaining = endTime - now;
             
             if (remaining <= 0) {
