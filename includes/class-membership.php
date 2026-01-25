@@ -34,20 +34,27 @@ class IELTS_MS_Membership {
         // Check for existing active membership
         $existing = $this->get_user_membership($user_id);
         
-        $start_date = current_time('mysql');
-        $base_date = $start_date; // Base date for calculating end date
+        // Work entirely with WordPress timestamps for timezone consistency
+        $start_timestamp = current_time('timestamp');
         
         if ($existing && $existing->status === 'active' && strtotime($existing->end_date) > current_time('timestamp')) {
             // Extend existing membership from current end date
-            $base_date = $existing->end_date;
+            // The end_date is a datetime string; we compare it as timestamp
+            // For extending, we parse it as a timestamp (strtotime interprets in local time)
+            $start_timestamp = strtotime($existing->end_date);
         }
         
-        // For trials, duration_days is actually in hours
+        // Calculate end timestamp by adding duration
         if ($is_trial) {
-            $end_date = date('Y-m-d H:i:s', strtotime($base_date . ' +' . $duration_days . ' hours'));
+            // For trials, duration_days is actually in hours
+            $end_timestamp = $start_timestamp + ($duration_days * HOUR_IN_SECONDS);
         } else {
-            $end_date = date('Y-m-d H:i:s', strtotime($base_date . ' +' . $duration_days . ' days'));
+            $end_timestamp = $start_timestamp + ($duration_days * DAY_IN_SECONDS);
         }
+        
+        // Convert timestamps to MySQL datetime format
+        $start_date = date('Y-m-d H:i:s', $start_timestamp);
+        $end_date = date('Y-m-d H:i:s', $end_timestamp);
         
         if ($existing) {
             // Update existing membership - keep original start_date
