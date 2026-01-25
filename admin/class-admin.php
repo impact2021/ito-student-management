@@ -1136,8 +1136,14 @@ class IELTS_MS_Admin {
         }
         
         // Convert datetime-local format to MySQL datetime
+        $converted_end_date = '';
         if ($end_date) {
-            $end_date = date('Y-m-d H:i:s', strtotime($end_date));
+            $timestamp = strtotime($end_date);
+            if ($timestamp === false || $timestamp < 0) {
+                // Invalid date format, skip update
+                return;
+            }
+            $converted_end_date = date('Y-m-d H:i:s', $timestamp);
         }
         
         if ($membership) {
@@ -1150,18 +1156,17 @@ class IELTS_MS_Admin {
             $format = array('%s', '%s');
             
             // Only update end_date if provided
-            if ($end_date) {
-                $update_data['end_date'] = $end_date;
+            if ($converted_end_date) {
+                $update_data['end_date'] = $converted_end_date;
                 $format[] = '%s';
                 
                 // Update status based on new end date
-                if (strtotime($end_date) > time()) {
-                    $update_data['status'] = 'active';
-                    $format[] = '%s';
-                    
-                    // Update user role using helper method
-                    $this->update_user_membership_role($user_id, true);
-                }
+                $is_future = strtotime($converted_end_date) > time();
+                $update_data['status'] = $is_future ? 'active' : 'expired';
+                $format[] = '%s';
+                
+                // Update user role using helper method
+                $this->update_user_membership_role($user_id, $is_future);
             }
             
             $wpdb->update(
@@ -1171,9 +1176,9 @@ class IELTS_MS_Admin {
                 $format,
                 array('%d')
             );
-        } elseif ($end_date) {
+        } elseif ($converted_end_date) {
             // Create new membership only if end_date is provided
-            $is_active = strtotime($end_date) > time();
+            $is_active = strtotime($converted_end_date) > time();
             
             $wpdb->insert(
                 $table,
@@ -1183,7 +1188,7 @@ class IELTS_MS_Admin {
                     'enrollment_type' => $enrollment_type,
                     'is_trial' => 0,
                     'start_date' => current_time('mysql'),
-                    'end_date' => $end_date
+                    'end_date' => $converted_end_date
                 ),
                 array('%d', '%s', '%s', '%d', '%s', '%s')
             );

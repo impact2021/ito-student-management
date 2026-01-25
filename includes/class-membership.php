@@ -383,20 +383,39 @@ class IELTS_MS_Membership {
             return $query;
         }
         
-        // Only filter for logged-in users with specific enrollment types
+        // For non-logged-in users or users without active memberships, 
+        // don't show any courses with module restrictions
         if (!is_user_logged_in()) {
+            // Show only courses without module restrictions
+            $tax_query = $query->get('tax_query') ?: array();
+            $tax_query[] = array(
+                'taxonomy' => 'ielts_module',
+                'operator' => 'NOT EXISTS'
+            );
+            $query->set('tax_query', $tax_query);
             return $query;
         }
         
         $user_id = get_current_user_id();
         $membership = $this->get_user_membership($user_id);
         
-        // If no membership or membership is 'both', don't filter
-        if (!$membership || $membership->enrollment_type === 'both') {
+        // If no active membership, show only courses without module restrictions
+        if (!$membership || $membership->status !== 'active' || strtotime($membership->end_date) <= time()) {
+            $tax_query = $query->get('tax_query') ?: array();
+            $tax_query[] = array(
+                'taxonomy' => 'ielts_module',
+                'operator' => 'NOT EXISTS'
+            );
+            $query->set('tax_query', $tax_query);
             return $query;
         }
         
-        // Add tax query to filter by module
+        // If membership is 'both', show all courses
+        if ($membership->enrollment_type === 'both') {
+            return $query;
+        }
+        
+        // Add tax query to filter by module - show courses with user's module OR no module
         $tax_query = $query->get('tax_query') ?: array();
         
         // Map enrollment type to module slug using constant
@@ -405,11 +424,16 @@ class IELTS_MS_Membership {
             : '';
         
         if ($module_slug) {
+            $tax_query['relation'] = 'OR';
             $tax_query[] = array(
                 'taxonomy' => 'ielts_module',
                 'field' => 'slug',
                 'terms' => $module_slug,
                 'operator' => 'IN'
+            );
+            $tax_query[] = array(
+                'taxonomy' => 'ielts_module',
+                'operator' => 'NOT EXISTS'
             );
             
             $query->set('tax_query', $tax_query);
