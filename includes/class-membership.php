@@ -34,13 +34,15 @@ class IELTS_MS_Membership {
         // Check for existing active membership
         $existing = $this->get_user_membership($user_id);
         
-        // Work entirely with WordPress timestamps for timezone consistency
+        // Work entirely with timestamps for timezone consistency
+        // current_time('timestamp') returns Unix timestamp respecting WordPress timezone
         $start_timestamp = current_time('timestamp');
         
         if ($existing && $existing->status === 'active' && strtotime($existing->end_date) > current_time('timestamp')) {
             // Extend existing membership from current end date
-            // The end_date is a datetime string; we compare it as timestamp
-            // For extending, we parse it as a timestamp (strtotime interprets in local time)
+            // Note: strtotime() interprets datetime string in server timezone
+            // Since we stored dates using date() which also uses server timezone,
+            // parsing with strtotime() maintains consistency
             $start_timestamp = strtotime($existing->end_date);
         }
         
@@ -53,6 +55,8 @@ class IELTS_MS_Membership {
         }
         
         // Convert timestamps to MySQL datetime format
+        // date() uses server timezone, which is consistent with how strtotime() parses above
+        // All comparisons use current_time('timestamp') which adjusts for WordPress timezone
         $start_date = date('Y-m-d H:i:s', $start_timestamp);
         $end_date = date('Y-m-d H:i:s', $end_timestamp);
         
