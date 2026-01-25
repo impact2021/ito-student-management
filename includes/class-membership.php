@@ -65,6 +65,11 @@ class IELTS_MS_Membership {
                 $update_data['enrollment_type'] = $enrollment_type;
             }
             
+            // Update is_trial flag when upgrading from trial to paid
+            if (!$is_trial && $existing->is_trial == 1) {
+                $update_data['is_trial'] = 0;
+            }
+            
             $result = $wpdb->update(
                 $table,
                 $update_data,
