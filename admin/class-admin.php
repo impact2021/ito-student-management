@@ -945,10 +945,6 @@ class IELTS_MS_Admin {
             // Check if membership is active and not expired
             $is_active = $membership->status === 'active' && strtotime($membership->end_date) > time();
             
-            if (!$is_active) {
-                return '<span style="color: #d63638; font-weight: 600;">Expired</span>';
-            }
-            
             // Build status text
             $status_parts = array();
             
@@ -963,12 +959,20 @@ class IELTS_MS_Admin {
             if ($membership->enrollment_type === 'general_training') {
                 $status_parts[] = 'General Training';
             } elseif ($membership->enrollment_type === 'academic') {
-                $status_parts[] = 'Academic';
+                $status_parts[] = 'Academic Module';
             } elseif ($membership->enrollment_type === 'both') {
                 $status_parts[] = 'General Training + Academic';
             }
             
             $status_text = implode(' - ', $status_parts);
+            
+            if (!$is_active) {
+                // For expired memberships, show what they had
+                return sprintf(
+                    '<span style="color: #d63638; font-weight: 600;">Expired</span><br><small style="color: #999;">%s</small>',
+                    esc_html($status_text)
+                );
+            }
             
             // Calculate time remaining
             $end_timestamp = strtotime($membership->end_date);
@@ -1022,14 +1026,30 @@ class IELTS_MS_Admin {
         <h3><?php _e('Membership Management', 'ielts-membership-system'); ?></h3>
         <table class="form-table">
             <tr>
-                <th><label for="membership_type"><?php _e('Membership Type', 'ielts-membership-system'); ?></label></th>
+                <th><label for="membership_is_trial"><?php _e('Trial Membership', 'ielts-membership-system'); ?></label></th>
+                <td>
+                    <label>
+                        <input type="checkbox" 
+                               name="membership_is_trial" 
+                               id="membership_is_trial" 
+                               value="1"
+                               <?php checked($is_trial, 1); ?>>
+                        <?php _e('This is a free trial membership', 'ielts-membership-system'); ?>
+                    </label>
+                    <p class="description">
+                        <?php _e('Check this box to mark this membership as a free trial. Trial memberships display a countdown timer.', 'ielts-membership-system'); ?>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th><label for="membership_type"><?php _e('Enrollment Type', 'ielts-membership-system'); ?></label></th>
                 <td>
                     <select name="membership_type" id="membership_type">
                         <option value="general_training" <?php selected($enrollment_type, 'general_training'); ?>>
                             <?php _e('General Training', 'ielts-membership-system'); ?>
                         </option>
                         <option value="academic" <?php selected($enrollment_type, 'academic'); ?>>
-                            <?php _e('Academic', 'ielts-membership-system'); ?>
+                            <?php _e('Academic Module', 'ielts-membership-system'); ?>
                         </option>
                         <option value="both" <?php selected($enrollment_type, 'both'); ?>>
                             <?php _e('Both (General Training + Academic)', 'ielts-membership-system'); ?>
@@ -1120,6 +1140,7 @@ class IELTS_MS_Admin {
         // Get values from form
         $enrollment_type = isset($_POST['membership_type']) ? sanitize_text_field($_POST['membership_type']) : '';
         $end_date = isset($_POST['membership_end_date']) ? sanitize_text_field($_POST['membership_end_date']) : '';
+        $is_trial = isset($_POST['membership_is_trial']) ? 1 : 0;
         
         // Validate enrollment type
         if (!IELTS_MS_Constants::is_valid_enrollment_type($enrollment_type)) {
@@ -1142,10 +1163,11 @@ class IELTS_MS_Admin {
             // Update existing membership
             $update_data = array(
                 'enrollment_type' => $enrollment_type,
+                'is_trial' => $is_trial,
                 'updated_date' => current_time('mysql')
             );
             
-            $format = array('%s', '%s');
+            $format = array('%s', '%d', '%s');
             
             // Only update end_date if provided
             if ($converted_end_date) {
@@ -1178,7 +1200,7 @@ class IELTS_MS_Admin {
                     'user_id' => $user_id,
                     'status' => $is_active ? 'active' : 'expired',
                     'enrollment_type' => $enrollment_type,
-                    'is_trial' => 0,
+                    'is_trial' => $is_trial,
                     'start_date' => current_time('mysql'),
                     'end_date' => $converted_end_date
                 ),
