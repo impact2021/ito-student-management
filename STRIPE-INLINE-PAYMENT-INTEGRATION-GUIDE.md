@@ -26,6 +26,14 @@ The critical breakthrough was initializing Stripe Elements immediately when the 
 
 ```javascript
 function initializeRegistrationStripeElements() {
+    // Get the membership amount from the hidden form field
+    const membershipAmount = $('input[name="membership_amount"]').val();
+    
+    if (!membershipAmount || parseFloat(membershipAmount) <= 0) {
+        // Show error if amount is invalid
+        return;
+    }
+    
     // Create Stripe Elements with payment mode
     elements = stripe.elements({
         mode: 'payment',
@@ -56,7 +64,24 @@ When the user submits the registration form, we use AJAX to create a Payment Int
 - Uses `automatic_payment_methods` instead of explicit payment method types to support all configured payment options
 
 ```php
+// In class IELTS_MS_Stripe_Gateway (extends IELTS_MS_Payment_Gateway)
 public function create_payment_intent() {
+    // Verify AJAX nonce for security
+    check_ajax_referer('ielts_ms_nonce', 'nonce');
+    
+    // Get and validate input parameters from POST
+    $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+    $amount = floatval($_POST['amount']);
+    $duration_days = intval($_POST['duration_days']);
+    $payment_type = sanitize_text_field($_POST['payment_type']);
+    $plan_key = sanitize_text_field($_POST['plan_key']);
+    
+    // Get Stripe secret key from WordPress options
+    $secret_key = get_option('ielts_ms_stripe_secret_key', '');
+    
+    // Create pending payment record in database
+    $payment_id = $this->record_payment($user_id, $amount, $duration_days, null, 'pending', $payment_type);
+    
     // Create Payment Intent with Stripe API
     $stripe_data = array(
         'amount' => intval($amount * 100), // Convert to cents
@@ -69,6 +94,17 @@ public function create_payment_intent() {
             'is_registration' => 'true'
         )
     );
+    
+    // Make API request to Stripe
+    $response = wp_remote_post('https://api.stripe.com/v1/payment_intents', array(
+        'headers' => array(
+            'Authorization' => 'Bearer ' . $secret_key,
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ),
+        'body' => $this->build_stripe_query($stripe_data)
+    ));
+    
+    $body = json_decode(wp_remote_retrieve_body($response), true);
     
     // API call returns clientSecret
     wp_send_json_success(array(
@@ -113,18 +149,42 @@ After Stripe confirms the payment succeeded, we send one final AJAX request to o
 - Redirect user to login or account page
 
 ```php
+// In class IELTS_MS_Stripe_Gateway (extends IELTS_MS_Payment_Gateway)
 public function confirm_payment() {
-    // Update payment status
+    // Verify AJAX nonce for security
+    check_ajax_referer('ielts_ms_nonce', 'nonce');
+    
+    // Get parameters from AJAX request
+    $payment_intent_id = sanitize_text_field($_POST['payment_intent_id']);
+    $payment_id = intval($_POST['payment_id']);
+    
+    // Get payment details from database
+    global $wpdb;
+    $table = IELTS_MS_Database::get_payments_table();
+    $payment = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$table} WHERE id = %d",
+        $payment_id
+    ));
+    
+    // Update payment status in database
     $wpdb->update($table, array(
         'payment_status' => 'completed',
         'transaction_id' => $payment_intent_id
-    ));
+    ), array('id' => $payment_id));
     
-    // Create membership
-    $membership->create_membership($user_id, $duration_days, $payment_id, $enrollment_type);
+    // Get user's enrollment type preference
+    $enrollment_type = get_user_meta($payment->user_id, 'ielts_ms_enrollment_type', true);
     
-    // Clean up registration flags
-    delete_user_meta($user_id, 'ielts_ms_registration_pending');
+    // Create membership for the user
+    $membership = new IELTS_MS_Membership();
+    $membership->create_membership($payment->user_id, $payment->duration_days, $payment_id, $enrollment_type, false);
+    
+    // Clean up registration pending flags
+    delete_user_meta($payment->user_id, 'ielts_ms_registration_pending');
+    delete_user_meta($payment->user_id, 'ielts_ms_registration_timestamp');
+    
+    // Send welcome email to new user
+    wp_new_user_notification($payment->user_id, null, 'user');
     
     // Return success with redirect URL
     wp_send_json_success(array(
