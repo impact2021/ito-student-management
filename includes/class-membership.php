@@ -16,6 +16,12 @@ class IELTS_MS_Membership {
         
         // Hook into IELTS Course Manager enrollment check
         add_filter('ielts_cm_has_course_access', array($this, 'check_course_access'), 10, 2);
+        
+        // Filter courses based on membership type
+        add_filter('pre_get_posts', array($this, 'filter_courses_by_membership'));
+        
+        // Filter individual course access
+        add_filter('the_posts', array($this, 'filter_single_course_access'), 10, 2);
     }
     
     /**
@@ -355,5 +361,112 @@ class IELTS_MS_Membership {
         }
         
         return false;
+    }
+    
+    /**
+     * Filter courses in queries based on user's membership type
+     */
+    public function filter_courses_by_membership($query) {
+        // Only filter on frontend, for course queries, and for non-admin users
+        if (is_admin() || !$query->is_main_query() || current_user_can('manage_options')) {
+            return $query;
+        }
+        
+        // Only filter ielts_course post type
+        if ($query->get('post_type') !== 'ielts_course' && !$query->is_post_type_archive('ielts_course')) {
+            return $query;
+        }
+        
+        // Only filter for logged-in users with specific enrollment types
+        if (!is_user_logged_in()) {
+            return $query;
+        }
+        
+        $user_id = get_current_user_id();
+        $membership = $this->get_user_membership($user_id);
+        
+        // If no membership or membership is 'both', don't filter
+        if (!$membership || $membership->enrollment_type === 'both') {
+            return $query;
+        }
+        
+        // Add tax query to filter by module
+        $tax_query = $query->get('tax_query') ?: array();
+        
+        // Map enrollment type to module slug
+        $module_slug = '';
+        if ($membership->enrollment_type === 'general_training') {
+            $module_slug = 'general-training';
+        } elseif ($membership->enrollment_type === 'academic') {
+            $module_slug = 'academic';
+        }
+        
+        if ($module_slug) {
+            $tax_query[] = array(
+                'taxonomy' => 'ielts_module',
+                'field' => 'slug',
+                'terms' => $module_slug,
+                'operator' => 'IN'
+            );
+            
+            $query->set('tax_query', $tax_query);
+        }
+        
+        return $query;
+    }
+    
+    /**
+     * Filter single course access based on membership
+     */
+    public function filter_single_course_access($posts, $query) {
+        // Only filter on frontend single course views for non-admins
+        if (is_admin() || !$query->is_main_query() || current_user_can('manage_options')) {
+            return $posts;
+        }
+        
+        // Only filter single ielts_course posts
+        if (!$query->is_single() || $query->get('post_type') !== 'ielts_course') {
+            // Also check if it's a single post and one of the posts is ielts_course
+            if (!$query->is_single() || empty($posts)) {
+                return $posts;
+            }
+            
+            $is_course = false;
+            foreach ($posts as $post) {
+                if ($post->post_type === 'ielts_course') {
+                    $is_course = true;
+                    break;
+                }
+            }
+            
+            if (!$is_course) {
+                return $posts;
+            }
+        }
+        
+        // Only filter for logged-in users
+        if (!is_user_logged_in()) {
+            return $posts;
+        }
+        
+        $user_id = get_current_user_id();
+        
+        // Check access for each post
+        foreach ($posts as $key => $post) {
+            if ($post->post_type === 'ielts_course') {
+                if (!$this->has_course_access($user_id, $post->ID)) {
+                    // Remove post from results or redirect
+                    unset($posts[$key]);
+                    
+                    // If this was the only post, trigger 404
+                    if (count($posts) === 0) {
+                        $query->set_404();
+                        status_header(404);
+                    }
+                }
+            }
+        }
+        
+        return $posts;
     }
 }
