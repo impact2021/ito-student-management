@@ -101,7 +101,7 @@ function ielts_ms_redirect_logged_in_homepage() {
 }
 
 /**
- * Protect exercise, sublesson, and lesson-page content
+ * Protect IELTS course content (courses, lessons, resources, quizzes)
  */
 function ielts_ms_protect_content() {
     // Don't protect admin area
@@ -117,49 +117,40 @@ function ielts_ms_protect_content() {
     // Get the current post/page
     $queried_object = get_queried_object();
     
-    // Only check for posts/pages
-    if (!$queried_object || !isset($queried_object->post_type)) {
-        return;
-    }
+    // Protected content patterns - actual post types registered by the plugin
+    $protected_post_types = array('ielts_course', 'ielts_lesson', 'ielts_resource', 'ielts_quiz');
     
-    $post_type = $queried_object->post_type;
-    $post_slug = isset($queried_object->post_name) ? $queried_object->post_name : '';
-    
-    // Check if this is an exercise, sublesson, or lesson-page
-    // This assumes custom post types 'exercise', 'sublesson', 'lesson-page', or 'ielts-lesson-page' exist
-    // Or we can check by slug patterns
     $is_protected_content = false;
     
-    // Protected content patterns
-    $protected_post_types = array('exercise', 'sublesson', 'lesson-page', 'ielts-lesson-page');
-    
-    // Derive URL patterns from post types (add leading and trailing slashes)
-    $protected_url_patterns = array_map(function($type) {
-        return '/' . $type . '/';
-    }, $protected_post_types);
-    
-    // Check if it's a custom post type for exercises, sublessons, or lesson-pages
-    if (in_array($post_type, $protected_post_types)) {
-        $is_protected_content = true;
-    }
-    
-    // Also check by slug patterns (using same patterns as post types)
-    if (!$is_protected_content) {
-        foreach ($protected_post_types as $pattern) {
-            if (strpos($post_slug, $pattern) !== false) {
-                $is_protected_content = true;
-                break;
-            }
+    // Check if it's an archive page for protected post types
+    foreach ($protected_post_types as $protected_type) {
+        if (is_post_type_archive($protected_type)) {
+            $is_protected_content = true;
+            break;
         }
     }
     
-    // Check current URL path for protected patterns
-    if (!$is_protected_content) {
-        $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
-        foreach ($protected_url_patterns as $pattern) {
-            if (strpos($current_url, $pattern) !== false) {
-                $is_protected_content = true;
-                break;
+    // If not an archive, check individual posts
+    if (!$is_protected_content && $queried_object && isset($queried_object->post_type)) {
+        $post_type = $queried_object->post_type;
+        
+        // Check if it's a protected custom post type (courses, lessons, resources, quizzes)
+        if (in_array($post_type, $protected_post_types)) {
+            $is_protected_content = true;
+        }
+        
+        // Also check current URL path for protected patterns as a fallback
+        // This catches edge cases where post_type might not be set correctly
+        if (!$is_protected_content) {
+            $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
+            // URL patterns use hyphens as defined in the rewrite slugs
+            $protected_url_patterns = array('/ielts-course/', '/ielts-lesson/', '/ielts-resource/', '/ielts-quiz/');
+            
+            foreach ($protected_url_patterns as $pattern) {
+                if (strpos($current_url, $pattern) !== false) {
+                    $is_protected_content = true;
+                    break;
+                }
             }
         }
     }

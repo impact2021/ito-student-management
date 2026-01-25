@@ -329,6 +329,13 @@ class IELTS_MS_Login_Manager {
         update_user_meta($user_id, 'ielts_ms_registration_timestamp', time());
         update_user_meta($user_id, 'ielts_ms_enrollment_type', $enrollment_type);
         
+        // Create a temporary trial membership while payment is being processed
+        // This ensures users have a membership record in the database
+        // The membership will be upgraded to paid once payment completes
+        $membership = new IELTS_MS_Membership();
+        $trial_duration = get_option('ielts_ms_trial_duration', 72); // Hours
+        $membership->create_membership($user_id, $trial_duration, null, $enrollment_type, true);
+        
         // Process payment based on gateway
         if ($payment_gateway === 'stripe') {
             $this->process_stripe_registration($user_id, $email, $membership_plan, $membership_amount, $membership_days, $enrollment_type);
