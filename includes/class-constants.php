@@ -31,8 +31,12 @@ class IELTS_MS_Constants {
     
     /**
      * Get module slug for enrollment type
+     * 
+     * @param string $enrollment_type The enrollment type (general_training, academic, or both)
+     * @return string The module slug, or empty string for 'both' (grants access to all modules)
      */
     public static function get_module_slug($enrollment_type) {
+        // 'both' enrollment type grants access to all modules, so no specific slug needed
         return isset(self::MODULE_SLUG_MAP[$enrollment_type]) 
             ? self::MODULE_SLUG_MAP[$enrollment_type] 
             : '';
