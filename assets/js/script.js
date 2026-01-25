@@ -95,6 +95,28 @@ jQuery(document).ready(function($) {
         initializeRegistrationStripeElements();
     }
     
+    // Handle membership type toggle (trial vs paid)
+    $('input[name="membership_type"]').on('change', function() {
+        const membershipType = $(this).val();
+        
+        if (membershipType === 'trial') {
+            // Hide paid membership section
+            $('#paid-membership-section').slideUp();
+            $('.submit-trial-text').show();
+            $('.submit-paid-text').hide();
+        } else {
+            // Show paid membership section
+            $('#paid-membership-section').slideDown();
+            $('.submit-trial-text').hide();
+            $('.submit-paid-text').show();
+            
+            // Initialize Stripe if needed
+            if ($('input[name="payment_gateway"]:checked').val() === 'stripe' && stripe && !registrationStripeInitialized) {
+                initializeRegistrationStripeElements();
+            }
+        }
+    });
+    
     // Login form
     $('#ielts-ms-login-form').on('submit', function(e) {
         e.preventDefault();
@@ -231,6 +253,7 @@ jQuery(document).ready(function($) {
         $button.addClass('loading').prop('disabled', true);
         $message.hide();
         
+        const membershipType = $('input[name="membership_type"]:checked').val() || 'paid';
         const gateway = $('input[name="payment_gateway"]:checked').val();
         
         // Validate form data first
@@ -259,14 +282,52 @@ jQuery(document).ready(function($) {
             return;
         }
         
-        // Handle Stripe inline payment
-        if (gateway === 'stripe' && stripe) {
+        // If trial, handle registration without payment
+        if (membershipType === 'trial') {
+            handleTrialRegistration($form, $button, $message);
+        } else if (gateway === 'stripe' && stripe) {
+            // Handle Stripe inline payment
             handleStripeInlineRegistration($form, $button, $message);
         } else {
             // Handle PayPal or legacy Stripe redirect
             handleLegacyRegistration($form, $button, $message, gateway);
         }
     });
+    
+    // Handle trial registration (no payment required)
+    function handleTrialRegistration($form, $button, $message) {
+        $.ajax({
+            url: ieltsMS.ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'ielts_ms_register_trial',
+                nonce: ieltsMS.nonce,
+                first_name: $('#reg_first_name').val(),
+                last_name: $('#reg_last_name').val(),
+                username: $('#reg_username').val(),
+                email: $('#reg_email').val(),
+                password: $('#reg_password').val(),
+                confirm_password: $('#reg_confirm_password').val(),
+                enrollment_type: $('input[name="enrollment_type"]:checked').val(),
+                trial_duration: $('input[name="trial_duration"]').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    $message.removeClass('error').addClass('success').text(response.data.message).show();
+                    setTimeout(function() {
+                        window.location.href = response.data.redirect;
+                    }, 2000);
+                } else {
+                    $message.removeClass('success').addClass('error').text(response.data.message).show();
+                    $button.removeClass('loading').prop('disabled', false);
+                }
+            },
+            error: function() {
+                $message.removeClass('success').addClass('error').text('An error occurred. Please try again.').show();
+                $button.removeClass('loading').prop('disabled', false);
+            }
+        });
+    }
     
     // Handle Stripe inline payment for registration
     function handleStripeInlineRegistration($form, $button, $message) {
@@ -303,7 +364,8 @@ jQuery(document).ready(function($) {
                     payment_gateway: 'stripe_inline',
                     membership_plan: $('input[name="membership_plan"]').val(),
                     membership_amount: $('input[name="membership_amount"]').val(),
-                    membership_days: $('input[name="membership_days"]').val()
+                    membership_days: $('input[name="membership_days"]').val(),
+                    enrollment_type: $('input[name="enrollment_type"]:checked').val()
                 },
                 success: function(response) {
                     if (response.success && response.data.user_id) {
@@ -336,6 +398,7 @@ jQuery(document).ready(function($) {
                 amount: $('input[name="membership_amount"]').val(),
                 duration_days: $('input[name="membership_days"]').val(),
                 payment_type: 'new',
+                enrollment_type: $('input[name="enrollment_type"]:checked').val(),
                 is_registration: 'true'
             },
             success: function(response) {

@@ -200,13 +200,19 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
                 );
                 
                 // Create/extend membership
+                $enrollment_type = get_user_meta($user_id, 'ielts_ms_enrollment_type', true);
+                if (empty($enrollment_type)) {
+                    $enrollment_type = 'both';
+                }
+                
                 $membership = new IELTS_MS_Membership();
-                $membership->create_membership($user_id, $duration_days, $payment_id);
+                $membership->create_membership($user_id, $duration_days, $payment_id, $enrollment_type, false);
                 
                     // If this was a registration, complete the registration
                     if ($is_registration) {
                         delete_user_meta($user_id, 'ielts_ms_registration_pending');
                         delete_user_meta($user_id, 'ielts_ms_registration_timestamp');
+                        delete_user_meta($user_id, 'ielts_ms_enrollment_type');
                         
                         // Send welcome email
                         wp_new_user_notification($user_id, null, 'user');
@@ -392,8 +398,13 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
         );
         
         // Create/extend membership
+        $enrollment_type = get_user_meta($payment->user_id, 'ielts_ms_enrollment_type', true);
+        if (empty($enrollment_type)) {
+            $enrollment_type = 'both';
+        }
+        
         $membership = new IELTS_MS_Membership();
-        $membership->create_membership($payment->user_id, $payment->duration_days, $payment_id);
+        $membership->create_membership($payment->user_id, $payment->duration_days, $payment_id, $enrollment_type, false);
         
         // Check if this was a registration payment
         $is_registration = get_user_meta($payment->user_id, 'ielts_ms_registration_pending', true);
@@ -401,6 +412,7 @@ class IELTS_MS_Stripe_Gateway extends IELTS_MS_Payment_Gateway {
         if ($is_registration) {
             delete_user_meta($payment->user_id, 'ielts_ms_registration_pending');
             delete_user_meta($payment->user_id, 'ielts_ms_registration_timestamp');
+            delete_user_meta($payment->user_id, 'ielts_ms_enrollment_type');
             
             // Send welcome email
             wp_new_user_notification($payment->user_id, null, 'user');

@@ -59,53 +59,115 @@ $new_membership = $pricing_options['new_90'];
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
             
             <h3><?php _e('Membership & Payment', 'ielts-membership-system'); ?></h3>
-            <div class="ielts-ms-membership-info" style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                <h4 style="margin-top: 0;"><?php echo esc_html($new_membership['label']); ?></h4>
-                <div class="price" style="font-size: 24px; font-weight: bold; color: #0073aa;">
-                    $<?php echo number_format($new_membership['price'], 2); ?> USD
-                </div>
-                <p style="margin-bottom: 0;"><?php _e('Full access to all IELTS preparation courses', 'ielts-membership-system'); ?></p>
-            </div>
             
+            <?php if (get_option('ielts_ms_trial_enabled', false)): ?>
             <div class="ielts-ms-form-group">
-                <label><?php _e('Select Payment Method', 'ielts-membership-system'); ?> *</label>
-                <div class="ielts-ms-payment-methods">
-                    <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
-                        <label class="payment-method-option">
-                            <input type="radio" name="payment_gateway" value="stripe" checked required>
-                            <span><?php _e('Credit Card (Stripe)', 'ielts-membership-system'); ?></span>
-                        </label>
-                    <?php endif; ?>
-                    
-                    <?php if (get_option('ielts_ms_paypal_enabled', true)): ?>
-                        <label class="payment-method-option">
-                            <input type="radio" name="payment_gateway" value="paypal" <?php echo !get_option('ielts_ms_stripe_enabled', true) && get_option('ielts_ms_paypal_enabled', true) ? 'checked' : ''; ?> required>
-                            <span><?php _e('PayPal', 'ielts-membership-system'); ?></span>
-                        </label>
-                    <?php endif; ?>
-                </div>
-            </div>
-            
-            <!-- Stripe Payment Element Container (for inline payment) -->
-            <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
-            <div id="stripe-payment-section" class="stripe-payment-section">
-                <div class="ielts-ms-form-group">
-                    <label><?php _e('Card Details', 'ielts-membership-system'); ?></label>
-                    <div id="payment-element" class="stripe-payment-element">
-                        <!-- Stripe Elements will be inserted here -->
-                    </div>
-                    <div id="payment-errors" class="ielts-ms-message" style="display: none;"></div>
+                <label><?php _e('Membership Type', 'ielts-membership-system'); ?> *</label>
+                <div class="ielts-ms-membership-type">
+                    <label class="membership-type-option">
+                        <input type="radio" name="membership_type" value="trial" checked>
+                        <span>
+                            <strong><?php _e('Free Trial', 'ielts-membership-system'); ?></strong>
+                            <small><?php 
+                                $trial_hours = get_option('ielts_ms_trial_duration', 72);
+                                if ($trial_hours >= 24) {
+                                    $trial_days = floor($trial_hours / 24);
+                                    echo $trial_days . ' ' . ($trial_days == 1 ? __('day', 'ielts-membership-system') : __('days', 'ielts-membership-system'));
+                                } else {
+                                    echo $trial_hours . ' ' . ($trial_hours == 1 ? __('hour', 'ielts-membership-system') : __('hours', 'ielts-membership-system'));
+                                }
+                            ?> <?php _e('- Try before you buy', 'ielts-membership-system'); ?></small>
+                        </span>
+                    </label>
+                    <label class="membership-type-option">
+                        <input type="radio" name="membership_type" value="paid">
+                        <span>
+                            <strong><?php _e('Paid Membership', 'ielts-membership-system'); ?></strong>
+                            <small><?php _e('Full access with no expiration during membership period', 'ielts-membership-system'); ?></small>
+                        </span>
+                    </label>
                 </div>
             </div>
             <?php endif; ?>
             
+            <div class="ielts-ms-form-group">
+                <label><?php _e('Select Course Module', 'ielts-membership-system'); ?> *</label>
+                <div class="ielts-ms-enrollment-type">
+                    <label class="enrollment-type-option">
+                        <input type="radio" name="enrollment_type" value="general_training" checked>
+                        <span>
+                            <strong><?php _e('General Training', 'ielts-membership-system'); ?></strong>
+                            <small><?php _e('Access to General Training courses', 'ielts-membership-system'); ?></small>
+                        </span>
+                    </label>
+                    <label class="enrollment-type-option">
+                        <input type="radio" name="enrollment_type" value="academic">
+                        <span>
+                            <strong><?php _e('Academic', 'ielts-membership-system'); ?></strong>
+                            <small><?php _e('Access to Academic courses', 'ielts-membership-system'); ?></small>
+                        </span>
+                    </label>
+                    <label class="enrollment-type-option">
+                        <input type="radio" name="enrollment_type" value="both">
+                        <span>
+                            <strong><?php _e('Both Modules', 'ielts-membership-system'); ?></strong>
+                            <small><?php _e('Access to all courses', 'ielts-membership-system'); ?></small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="paid-membership-section" style="<?php echo get_option('ielts_ms_trial_enabled', false) ? 'display: none;' : ''; ?>">
+                <div class="ielts-ms-membership-info" style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0;"><?php echo esc_html($new_membership['label']); ?></h4>
+                    <div class="price" style="font-size: 24px; font-weight: bold; color: #0073aa;">
+                        $<?php echo number_format($new_membership['price'], 2); ?> USD
+                    </div>
+                    <p style="margin-bottom: 0;"><?php _e('Full access to selected course module(s)', 'ielts-membership-system'); ?></p>
+                </div>
+                
+                <div class="ielts-ms-form-group">
+                    <label><?php _e('Select Payment Method', 'ielts-membership-system'); ?> *</label>
+                    <div class="ielts-ms-payment-methods">
+                        <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
+                            <label class="payment-method-option">
+                                <input type="radio" name="payment_gateway" value="stripe" checked required>
+                                <span><?php _e('Credit Card (Stripe)', 'ielts-membership-system'); ?></span>
+                            </label>
+                        <?php endif; ?>
+                        
+                        <?php if (get_option('ielts_ms_paypal_enabled', true)): ?>
+                            <label class="payment-method-option">
+                                <input type="radio" name="payment_gateway" value="paypal" <?php echo !get_option('ielts_ms_stripe_enabled', true) && get_option('ielts_ms_paypal_enabled', true) ? 'checked' : ''; ?> required>
+                                <span><?php _e('PayPal', 'ielts-membership-system'); ?></span>
+                            </label>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <!-- Stripe Payment Element Container (for inline payment) -->
+                <?php if (get_option('ielts_ms_stripe_enabled', true)): ?>
+                <div id="stripe-payment-section" class="stripe-payment-section">
+                    <div class="ielts-ms-form-group">
+                        <label><?php _e('Card Details', 'ielts-membership-system'); ?></label>
+                        <div id="payment-element" class="stripe-payment-element">
+                            <!-- Stripe Elements will be inserted here -->
+                        </div>
+                        <div id="payment-errors" class="ielts-ms-message" style="display: none;"></div>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+            
             <input type="hidden" name="membership_plan" value="new_90">
             <input type="hidden" name="membership_amount" value="<?php echo $new_membership['price']; ?>">
             <input type="hidden" name="membership_days" value="<?php echo $new_membership['days']; ?>">
+            <input type="hidden" name="trial_duration" value="<?php echo get_option('ielts_ms_trial_duration', 72); ?>">
             
             <div class="ielts-ms-form-group">
                 <button type="submit" class="ielts-ms-btn ielts-ms-btn-primary">
-                    <?php _e('Register & Pay', 'ielts-membership-system'); ?>
+                    <span class="submit-trial-text"><?php echo get_option('ielts_ms_trial_enabled', false) ? __('Start Free Trial', 'ielts-membership-system') : __('Register & Pay', 'ielts-membership-system'); ?></span>
+                    <span class="submit-paid-text" style="display: none;"><?php _e('Register & Pay', 'ielts-membership-system'); ?></span>
                 </button>
             </div>
             

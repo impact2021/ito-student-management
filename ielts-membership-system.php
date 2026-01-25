@@ -3,7 +3,7 @@
  * Plugin Name: IELTS Membership System
  * Plugin URI: https://www.ieltstestonline.com/
  * Description: Membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
- * Version: 9.0
+ * Version: 10.0
  * Author: IELTStestONLINE
  * Author URI: https://www.ieltstestonline.com/
  * Text Domain: ielts-membership-system
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IELTS_MS_VERSION', '9.0');
+define('IELTS_MS_VERSION', '10.0');
 define('IELTS_MS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
@@ -28,6 +28,8 @@ define('IELTS_MS_PLUGIN_FILE', __FILE__);
 // Include required files
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-database.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-membership.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-email-manager.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-course-manager.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-payment-gateway.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-paypal-gateway.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-stripe-gateway.php';
@@ -42,6 +44,7 @@ require_once IELTS_MS_PLUGIN_DIR . 'admin/class-admin.php';
 function ielts_ms_init() {
     // Initialize components
     $membership = new IELTS_MS_Membership();
+    $course_manager = new IELTS_MS_Course_Manager();
     $login_manager = new IELTS_MS_Login_Manager();
     $account_manager = new IELTS_MS_Account_Manager();
     $shortcodes = new IELTS_MS_Shortcodes();
@@ -259,6 +262,12 @@ function ielts_ms_activate() {
     // Create default pages if they don't exist
     ielts_ms_create_default_pages();
     
+    // Create default module terms
+    IELTS_MS_Course_Manager::create_default_modules();
+    
+    // Set default email settings if not set
+    ielts_ms_set_default_email_settings();
+    
     flush_rewrite_rules();
 }
 register_activation_hook(__FILE__, 'ielts_ms_activate');
@@ -353,3 +362,25 @@ function ielts_ms_enqueue_assets() {
     ));
 }
 add_action('wp_enqueue_scripts', 'ielts_ms_enqueue_assets');
+
+/**
+ * Set default email settings
+ */
+function ielts_ms_set_default_email_settings() {
+    $defaults = IELTS_MS_Email_Manager::get_default_templates();
+    
+    foreach ($defaults as $key => $value) {
+        if (!get_option('ielts_ms_email_' . $key)) {
+            update_option('ielts_ms_email_' . $key, $value);
+        }
+    }
+    
+    // Set default email from settings if not set
+    if (!get_option('ielts_ms_email_from_name')) {
+        update_option('ielts_ms_email_from_name', get_bloginfo('name'));
+    }
+    
+    if (!get_option('ielts_ms_email_from_email')) {
+        update_option('ielts_ms_email_from_email', get_bloginfo('admin_email'));
+    }
+}
