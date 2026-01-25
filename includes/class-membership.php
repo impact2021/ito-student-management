@@ -14,14 +14,15 @@ class IELTS_MS_Membership {
     public function __construct() {
         $this->db = new IELTS_MS_Database();
         
+        // Commented out for v11.0 - simple membership only
         // Hook into IELTS Course Manager enrollment check
-        add_filter('ielts_cm_has_course_access', array($this, 'check_course_access'), 10, 2);
+        // add_filter('ielts_cm_has_course_access', array($this, 'check_course_access'), 10, 2);
         
         // Filter courses based on membership type
-        add_filter('pre_get_posts', array($this, 'filter_courses_by_membership'));
+        // add_filter('pre_get_posts', array($this, 'filter_courses_by_membership'));
         
         // Filter individual course access
-        add_filter('the_posts', array($this, 'filter_single_course_access'), 10, 2);
+        // add_filter('the_posts', array($this, 'filter_single_course_access'), 10, 2);
     }
     
     /**
@@ -138,12 +139,13 @@ class IELTS_MS_Membership {
             }
         }
         
+        // Commented out for v11.0 - simple membership only
         // Send appropriate email
-        if ($is_trial) {
-            IELTS_MS_Email_Manager::send_trial_enrollment_email($user_id);
-        } else {
-            IELTS_MS_Email_Manager::send_paid_enrollment_email($user_id, $enrollment_type, $duration_days);
-        }
+        // if ($is_trial) {
+        //     IELTS_MS_Email_Manager::send_trial_enrollment_email($user_id);
+        // } else {
+        //     IELTS_MS_Email_Manager::send_paid_enrollment_email($user_id, $enrollment_type, $duration_days);
+        // }
         
         return $membership_id;
     }
@@ -231,12 +233,13 @@ class IELTS_MS_Membership {
             }
         }
         
+        // Commented out for v11.0 - simple membership only
         // Send appropriate expiration email
-        if ($was_trial) {
-            IELTS_MS_Email_Manager::send_trial_expiration_email($user_id);
-        } elseif ($was_paid) {
-            IELTS_MS_Email_Manager::send_paid_expiration_email($user_id);
-        }
+        // if ($was_trial) {
+        //     IELTS_MS_Email_Manager::send_trial_expiration_email($user_id);
+        // } elseif ($was_paid) {
+        //     IELTS_MS_Email_Manager::send_paid_expiration_email($user_id);
+        // }
         
         return $result;
     }

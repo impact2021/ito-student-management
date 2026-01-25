@@ -11,8 +11,17 @@ class IELTS_MS_Constants {
     
     /**
      * Allowed enrollment types
+     * v11.0: Simplified to only Academic and General Training
      */
-    const ENROLLMENT_TYPES = array('general_training', 'academic', 'both');
+    const ENROLLMENT_TYPES = array('general_training', 'academic');
+    
+    // Commented out for v11.0 - will be restored if "Both" option is needed
+    // const ENROLLMENT_TYPES = array('general_training', 'academic', 'both');
+    
+    /**
+     * Default enrollment type for new memberships
+     */
+    const DEFAULT_ENROLLMENT_TYPE = 'academic';
     
     /**
      * Enrollment type to module slug mapping
