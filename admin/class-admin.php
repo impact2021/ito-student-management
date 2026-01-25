@@ -997,7 +997,7 @@ class IELTS_MS_Admin {
         $membership_obj = new IELTS_MS_Membership();
         $membership = $membership_obj->get_user_membership($user->ID);
         
-        $enrollment_type = $membership ? $membership->enrollment_type : 'academic';
+        $enrollment_type = $membership ? $membership->enrollment_type : IELTS_MS_Constants::DEFAULT_ENROLLMENT_TYPE;
         $end_date = $membership ? $membership->end_date : '';
         $status = $membership ? $membership->status : '';
         
@@ -1113,8 +1113,8 @@ class IELTS_MS_Admin {
         $enrollment_type = isset($_POST['membership_type']) ? sanitize_text_field($_POST['membership_type']) : '';
         $end_date = isset($_POST['membership_end_date']) ? sanitize_text_field($_POST['membership_end_date']) : '';
         
-        // Validate enrollment type
-        if (!in_array($enrollment_type, array('general_training', 'academic'))) {
+        // Validate enrollment type using constants
+        if (!IELTS_MS_Constants::is_valid_enrollment_type($enrollment_type)) {
             return;
         }
         
