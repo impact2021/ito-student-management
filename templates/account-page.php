@@ -75,7 +75,7 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                                     <?php
                                     // Calculate hours and minutes remaining for trial
                                     $end_timestamp = strtotime($user_membership->end_date);
-                                    $now = time();
+                                    $now = current_time('timestamp');
                                     $remaining_seconds = $end_timestamp - $now;
                                     
                                     // Handle expired trial

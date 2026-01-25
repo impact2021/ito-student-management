@@ -34,20 +34,31 @@ class IELTS_MS_Membership {
         // Check for existing active membership
         $existing = $this->get_user_membership($user_id);
         
-        $start_date = current_time('mysql');
-        $base_date = $start_date; // Base date for calculating end date
+        // Work entirely with timestamps for timezone consistency
+        // current_time('timestamp') returns Unix timestamp respecting WordPress timezone
+        $start_timestamp = current_time('timestamp');
         
-        if ($existing && $existing->status === 'active' && strtotime($existing->end_date) > time()) {
+        if ($existing && $existing->status === 'active' && strtotime($existing->end_date) > current_time('timestamp')) {
             // Extend existing membership from current end date
-            $base_date = $existing->end_date;
+            // Note: strtotime() interprets datetime string in server timezone
+            // Since we stored dates using date() which also uses server timezone,
+            // parsing with strtotime() maintains consistency
+            $start_timestamp = strtotime($existing->end_date);
         }
         
-        // For trials, duration_days is actually in hours
+        // Calculate end timestamp by adding duration
         if ($is_trial) {
-            $end_date = date('Y-m-d H:i:s', strtotime($base_date . ' +' . $duration_days . ' hours'));
+            // For trials, duration_days is actually in hours
+            $end_timestamp = $start_timestamp + ($duration_days * HOUR_IN_SECONDS);
         } else {
-            $end_date = date('Y-m-d H:i:s', strtotime($base_date . ' +' . $duration_days . ' days'));
+            $end_timestamp = $start_timestamp + ($duration_days * DAY_IN_SECONDS);
         }
+        
+        // Convert timestamps to MySQL datetime format
+        // date() uses server timezone, which is consistent with how strtotime() parses above
+        // All comparisons use current_time('timestamp') which adjusts for WordPress timezone
+        $start_date = date('Y-m-d H:i:s', $start_timestamp);
+        $end_date = date('Y-m-d H:i:s', $end_timestamp);
         
         if ($existing) {
             // Update existing membership - keep original start_date
@@ -163,7 +174,7 @@ class IELTS_MS_Membership {
         }
         
         // Check if membership is active and not expired
-        return $membership->status === 'active' && strtotime($membership->end_date) > time();
+        return $membership->status === 'active' && strtotime($membership->end_date) > current_time('timestamp');
     }
     
     /**
@@ -176,7 +187,7 @@ class IELTS_MS_Membership {
             return false;
         }
         
-        return strtotime($membership->end_date) < time();
+        return strtotime($membership->end_date) < current_time('timestamp');
     }
     
     /**
@@ -240,7 +251,7 @@ class IELTS_MS_Membership {
             return 0;
         }
         
-        $now = time();
+        $now = current_time('timestamp');
         $end = strtotime($membership->end_date);
         
         if ($end < $now) {
@@ -419,7 +430,7 @@ class IELTS_MS_Membership {
         $membership = $this->get_user_membership($user_id);
         
         // If no active membership, show only courses without module restrictions
-        if (!$membership || $membership->status !== 'active' || strtotime($membership->end_date) <= time()) {
+        if (!$membership || $membership->status !== 'active' || strtotime($membership->end_date) <= current_time('timestamp')) {
             $this->add_unrestricted_courses_filter($query);
             return $query;
         }

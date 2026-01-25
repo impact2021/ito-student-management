@@ -943,7 +943,7 @@ class IELTS_MS_Admin {
             }
             
             // Check if membership is active and not expired
-            $is_active = $membership->status === 'active' && strtotime($membership->end_date) > time();
+            $is_active = $membership->status === 'active' && strtotime($membership->end_date) > current_time('timestamp');
             
             // Build status text
             $status_parts = array();
@@ -976,7 +976,7 @@ class IELTS_MS_Admin {
             
             // Calculate time remaining
             $end_timestamp = strtotime($membership->end_date);
-            $now = time();
+            $now = current_time('timestamp');
             $remaining_seconds = $end_timestamp - $now;
             
             if ((int)$membership->is_trial === 1) {
@@ -1082,7 +1082,7 @@ class IELTS_MS_Admin {
                 <th><?php _e('Current Status', 'ielts-membership-system'); ?></th>
                 <td>
                     <?php
-                    $is_active = $status === 'active' && strtotime($end_date) > time();
+                    $is_active = $status === 'active' && strtotime($end_date) > current_time('timestamp');
                     if ($is_active) {
                         echo '<span style="color: #2271b1; font-weight: 600;">✓ Active</span>';
                         if ((int)$is_trial === 1) {
@@ -1188,7 +1188,7 @@ class IELTS_MS_Admin {
             }
             
             // Always update status based on end date (new or existing)
-            $is_future = strtotime($end_date_to_check) > time();
+            $is_future = strtotime($end_date_to_check) > current_time('timestamp');
             $update_data['status'] = $is_future ? 'active' : 'expired';
             $format[] = '%s';
             
@@ -1204,7 +1204,7 @@ class IELTS_MS_Admin {
             );
         } elseif ($converted_end_date) {
             // Create new membership only if end_date is provided
-            $is_active = strtotime($converted_end_date) > time();
+            $is_active = strtotime($converted_end_date) > current_time('timestamp');
             
             $wpdb->insert(
                 $table,
