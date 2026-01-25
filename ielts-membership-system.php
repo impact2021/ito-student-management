@@ -3,7 +3,7 @@
  * Plugin Name: IELTS Membership System
  * Plugin URI: https://www.ieltstestonline.com/
  * Description: Membership and payment system for IELTS preparation courses with PayPal and Stripe integration.
- * Version: 11.0
+ * Version: 10.2
  * Author: IELTStestONLINE
  * Author URI: https://www.ieltstestonline.com/
  * Text Domain: ielts-membership-system
@@ -20,7 +20,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('IELTS_MS_VERSION', '11.0');
+define('IELTS_MS_VERSION', '10.2');
 define('IELTS_MS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('IELTS_MS_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('IELTS_MS_PLUGIN_FILE', __FILE__);
@@ -29,15 +29,14 @@ define('IELTS_MS_PLUGIN_FILE', __FILE__);
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-constants.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-database.php';
 require_once IELTS_MS_PLUGIN_DIR . 'includes/class-membership.php';
-// Commented out for v11.0 - simple membership only
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-email-manager.php';
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-course-manager.php';
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-payment-gateway.php';
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-paypal-gateway.php';
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-stripe-gateway.php';
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-login-manager.php';
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-account-manager.php';
-// require_once IELTS_MS_PLUGIN_DIR . 'includes/class-shortcodes.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-email-manager.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-course-manager.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-payment-gateway.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-paypal-gateway.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-stripe-gateway.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-login-manager.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-account-manager.php';
+require_once IELTS_MS_PLUGIN_DIR . 'includes/class-shortcodes.php';
 require_once IELTS_MS_PLUGIN_DIR . 'admin/class-admin.php';
 
 // Store plugin instances to ensure they persist throughout request lifecycle
@@ -51,43 +50,37 @@ function ielts_ms_init() {
     
     // Initialize components
     $ielts_ms_instances['membership'] = new IELTS_MS_Membership();
+    $course_manager = new IELTS_MS_Course_Manager();
+    $login_manager = new IELTS_MS_Login_Manager();
+    $account_manager = new IELTS_MS_Account_Manager();
+    $shortcodes = new IELTS_MS_Shortcodes();
+    $shortcodes->register();
     
-    // Commented out for v11.0 - simple membership only
-    // $course_manager = new IELTS_MS_Course_Manager();
-    // $login_manager = new IELTS_MS_Login_Manager();
-    // $account_manager = new IELTS_MS_Account_Manager();
-    // $shortcodes = new IELTS_MS_Shortcodes();
-    // $shortcodes->register();
-    
-    // Initialize payment gateways - commented out for v11.0
-    // new IELTS_MS_PayPal_Gateway();
-    // new IELTS_MS_Stripe_Gateway();
+    // Initialize payment gateways
+    new IELTS_MS_PayPal_Gateway();
+    new IELTS_MS_Stripe_Gateway();
     
     // Initialize admin if in admin area
     if (is_admin()) {
         $ielts_ms_instances['admin'] = new IELTS_MS_Admin();
     }
     
-    // Commented out for v11.0 - no cron jobs for simple membership
     // Schedule cron job for membership expiration check
-    // if (!wp_next_scheduled('ielts_ms_check_expired_memberships')) {
-    //     wp_schedule_event(time(), 'daily', 'ielts_ms_check_expired_memberships');
-    // }
+    if (!wp_next_scheduled('ielts_ms_check_expired_memberships')) {
+        wp_schedule_event(time(), 'daily', 'ielts_ms_check_expired_memberships');
+    }
     
-    // Commented out for v11.0 - no redirects for simple membership
     // Redirect logged-in users to custom homepage
-    // add_action('template_redirect', 'ielts_ms_redirect_logged_in_homepage');
+    add_action('template_redirect', 'ielts_ms_redirect_logged_in_homepage');
     
     // Protect exercise, sublesson, and lesson-page content
-    // add_action('template_redirect', 'ielts_ms_protect_content');
+    add_action('template_redirect', 'ielts_ms_protect_content');
 }
 add_action('plugins_loaded', 'ielts_ms_init');
 
-// Commented out for v11.0 - simple membership only
 /**
  * Redirect logged-in users to custom homepage
  */
-/*
 function ielts_ms_redirect_logged_in_homepage() {
     // Only redirect on the actual homepage
     if (!is_front_page() || !is_user_logged_in()) {
@@ -111,13 +104,10 @@ function ielts_ms_redirect_logged_in_homepage() {
         }
     }
 }
-*/
 
-// Commented out for v11.0 - simple membership only
 /**
  * Protect IELTS course content (courses, lessons, resources, quizzes)
  */
-/*
 function ielts_ms_protect_content() {
     // Don't protect admin area
     if (is_admin()) {
@@ -213,13 +203,10 @@ function ielts_ms_protect_content() {
         }
     }
 }
-*/
 
-// Commented out for v11.0 - simple membership only
 /**
  * Cron job to check and expire memberships
  */
-/*
 function ielts_ms_check_expired_memberships_callback() {
     global $wpdb;
     $table = IELTS_MS_Database::get_memberships_table();
@@ -242,7 +229,6 @@ function ielts_ms_check_expired_memberships_callback() {
     }
 }
 add_action('ielts_ms_check_expired_memberships', 'ielts_ms_check_expired_memberships_callback');
-*/
 
 /**
  * Register custom user roles
@@ -270,15 +256,14 @@ function ielts_ms_activate() {
     // Register custom roles
     ielts_ms_register_roles();
     
-    // Commented out for v11.0 - simple membership only
     // Create default pages if they don't exist
-    // ielts_ms_create_default_pages();
+    ielts_ms_create_default_pages();
     
     // Create default module terms
-    // IELTS_MS_Course_Manager::create_default_modules();
+    IELTS_MS_Course_Manager::create_default_modules();
     
     // Set default email settings if not set
-    // ielts_ms_set_default_email_settings();
+    ielts_ms_set_default_email_settings();
     
     flush_rewrite_rules();
 }
@@ -298,11 +283,9 @@ function ielts_ms_deactivate() {
 }
 register_deactivation_hook(__FILE__, 'ielts_ms_deactivate');
 
-// Commented out for v11.0 - simple membership only
 /**
  * Create default pages
  */
-/*
 function ielts_ms_create_default_pages() {
     // Login page
     $login_page = get_page_by_path('membership-login');
@@ -349,13 +332,10 @@ function ielts_ms_create_default_pages() {
         update_option('ielts_ms_account_page_id', $account_page->ID);
     }
 }
-*/
 
-// Commented out for v11.0 - simple membership only
 /**
  * Enqueue frontend assets
  */
-/*
 function ielts_ms_enqueue_assets() {
     wp_enqueue_style('ielts-membership-style', IELTS_MS_PLUGIN_URL . 'assets/css/style.css', array(), IELTS_MS_VERSION);
     
@@ -403,13 +383,10 @@ function ielts_ms_enqueue_assets() {
     ));
 }
 add_action('wp_enqueue_scripts', 'ielts_ms_enqueue_assets');
-*/
 
-// Commented out for v11.0 - simple membership only
 /**
  * Set default email settings
  */
-/*
 function ielts_ms_set_default_email_settings() {
     $defaults = IELTS_MS_Email_Manager::get_default_templates();
     
@@ -428,4 +405,3 @@ function ielts_ms_set_default_email_settings() {
         update_option('ielts_ms_email_from_email', get_bloginfo('admin_email'));
     }
 }
-*/

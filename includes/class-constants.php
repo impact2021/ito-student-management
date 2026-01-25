@@ -11,12 +11,8 @@ class IELTS_MS_Constants {
     
     /**
      * Allowed enrollment types
-     * v11.0: Simplified to only Academic and General Training
      */
-    const ENROLLMENT_TYPES = array('general_training', 'academic');
-    
-    // Commented out for v11.0 - will be restored if "Both" option is needed
-    // const ENROLLMENT_TYPES = array('general_training', 'academic', 'both');
+    const ENROLLMENT_TYPES = array('general_training', 'academic', 'both');
     
     /**
      * Default enrollment type for new memberships
@@ -25,6 +21,8 @@ class IELTS_MS_Constants {
     
     /**
      * Enrollment type to module slug mapping
+     * Note: 'both' enrollment type doesn't have a specific module slug
+     * as it grants access to all modules
      */
     const MODULE_SLUG_MAP = array(
         'general_training' => 'general-training',
@@ -33,8 +31,12 @@ class IELTS_MS_Constants {
     
     /**
      * Get module slug for enrollment type
+     * 
+     * @param string $enrollment_type The enrollment type (general_training, academic, or both)
+     * @return string The module slug, or empty string for 'both' (grants access to all modules)
      */
     public static function get_module_slug($enrollment_type) {
+        // 'both' enrollment type grants access to all modules, so no specific slug needed
         return isset(self::MODULE_SLUG_MAP[$enrollment_type]) 
             ? self::MODULE_SLUG_MAP[$enrollment_type] 
             : '';
