@@ -125,25 +125,22 @@ function ielts_ms_protect_content() {
     $post_type = $queried_object->post_type;
     $post_slug = isset($queried_object->post_name) ? $queried_object->post_name : '';
     
-    // Check if this is an exercise, sublesson, or lesson-page
-    // This assumes custom post types 'exercise', 'sublesson', 'lesson-page', or 'ielts-lesson-page' exist
-    // Or we can check by slug patterns
+    // Check if this is course content that should be protected
+    // Protect all IELTS course-related content including courses, lessons, resources, and quizzes
     $is_protected_content = false;
     
-    // Protected content patterns
-    $protected_post_types = array('exercise', 'sublesson', 'lesson-page', 'ielts-lesson-page');
+    // Protected content patterns - actual post types registered by the plugin
+    $protected_post_types = array('ielts_course', 'ielts_lesson', 'ielts_resource', 'ielts_quiz');
     
-    // Derive URL patterns from post types (add leading and trailing slashes)
-    $protected_url_patterns = array_map(function($type) {
-        return '/' . $type . '/';
-    }, $protected_post_types);
+    // URL patterns use hyphens as defined in the rewrite slugs
+    $protected_url_patterns = array('/ielts-course/', '/ielts-lesson/', '/ielts-resource/', '/ielts-quiz/');
     
-    // Check if it's a custom post type for exercises, sublessons, or lesson-pages
+    // Check if it's a protected custom post type (courses, lessons, resources, quizzes)
     if (in_array($post_type, $protected_post_types)) {
         $is_protected_content = true;
     }
     
-    // Also check by slug patterns (using same patterns as post types)
+    // Also check by slug patterns
     if (!$is_protected_content) {
         foreach ($protected_post_types as $pattern) {
             if (strpos($post_slug, $pattern) !== false) {
@@ -153,7 +150,7 @@ function ielts_ms_protect_content() {
         }
     }
     
-    // Check current URL path for protected patterns
+    // Check current URL path for protected patterns (matches rewrite slugs)
     if (!$is_protected_content) {
         $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
         foreach ($protected_url_patterns as $pattern) {
