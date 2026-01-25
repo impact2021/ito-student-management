@@ -9,6 +9,15 @@ if (!defined('ABSPATH')) {
 
 class IELTS_MS_Admin {
     
+    // Allowed enrollment types
+    const ENROLLMENT_TYPES = array('general_training', 'academic', 'both');
+    
+    // Enrollment type to module slug mapping
+    const MODULE_SLUG_MAP = array(
+        'general_training' => 'general-training',
+        'academic' => 'academic'
+    );
+    
     public function __construct() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'register_settings'));
@@ -1080,6 +1089,30 @@ class IELTS_MS_Admin {
     }
     
     /**
+     * Update user role based on membership status
+     */
+    private function update_user_membership_role($user_id, $is_active) {
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return;
+        }
+        
+        if ($is_active) {
+            // Grant active role
+            $user->remove_role('expired');
+            if (!in_array('active', $user->roles)) {
+                $user->add_role('active');
+            }
+        } else {
+            // Grant expired role
+            $user->remove_role('active');
+            if (!in_array('expired', $user->roles)) {
+                $user->add_role('expired');
+            }
+        }
+    }
+    
+    /**
      * Save membership fields from user profile
      */
     public function save_membership_fields($user_id) {
@@ -1098,7 +1131,7 @@ class IELTS_MS_Admin {
         $end_date = isset($_POST['membership_end_date']) ? sanitize_text_field($_POST['membership_end_date']) : '';
         
         // Validate enrollment type
-        if (!in_array($enrollment_type, array('general_training', 'academic', 'both'))) {
+        if (!in_array($enrollment_type, self::ENROLLMENT_TYPES)) {
             return;
         }
         
@@ -1110,44 +1143,43 @@ class IELTS_MS_Admin {
         if ($membership) {
             // Update existing membership
             $update_data = array(
-                'enrollment_type' => $enrollment_type
+                'enrollment_type' => $enrollment_type,
+                'updated_date' => current_time('mysql')
             );
+            
+            $format = array('%s', '%s');
             
             // Only update end_date if provided
             if ($end_date) {
                 $update_data['end_date'] = $end_date;
+                $format[] = '%s';
                 
                 // Update status based on new end date
                 if (strtotime($end_date) > time()) {
                     $update_data['status'] = 'active';
+                    $format[] = '%s';
                     
-                    // Update user role
-                    $user = get_userdata($user_id);
-                    if ($user) {
-                        $user->remove_role('expired');
-                        if (!in_array('active', $user->roles)) {
-                            $user->add_role('active');
-                        }
-                    }
+                    // Update user role using helper method
+                    $this->update_user_membership_role($user_id, true);
                 }
             }
-            
-            $update_data['updated_date'] = current_time('mysql');
             
             $wpdb->update(
                 $table,
                 $update_data,
                 array('id' => $membership->id),
-                array_fill(0, count($update_data), '%s'),
+                $format,
                 array('%d')
             );
         } elseif ($end_date) {
             // Create new membership only if end_date is provided
+            $is_active = strtotime($end_date) > time();
+            
             $wpdb->insert(
                 $table,
                 array(
                     'user_id' => $user_id,
-                    'status' => strtotime($end_date) > time() ? 'active' : 'expired',
+                    'status' => $is_active ? 'active' : 'expired',
                     'enrollment_type' => $enrollment_type,
                     'is_trial' => 0,
                     'start_date' => current_time('mysql'),
@@ -1156,16 +1188,8 @@ class IELTS_MS_Admin {
                 array('%d', '%s', '%s', '%d', '%s', '%s')
             );
             
-            // Update user role if membership is active
-            if (strtotime($end_date) > time()) {
-                $user = get_userdata($user_id);
-                if ($user) {
-                    $user->remove_role('expired');
-                    if (!in_array('active', $user->roles)) {
-                        $user->add_role('active');
-                    }
-                }
-            }
+            // Update user role using helper method
+            $this->update_user_membership_role($user_id, $is_active);
         }
     }
     

@@ -11,6 +11,12 @@ class IELTS_MS_Membership {
     
     private $db;
     
+    // Enrollment type to module slug mapping
+    const MODULE_SLUG_MAP = array(
+        'general_training' => 'general-training',
+        'academic' => 'academic'
+    );
+    
     public function __construct() {
         $this->db = new IELTS_MS_Database();
         
@@ -393,13 +399,10 @@ class IELTS_MS_Membership {
         // Add tax query to filter by module
         $tax_query = $query->get('tax_query') ?: array();
         
-        // Map enrollment type to module slug
-        $module_slug = '';
-        if ($membership->enrollment_type === 'general_training') {
-            $module_slug = 'general-training';
-        } elseif ($membership->enrollment_type === 'academic') {
-            $module_slug = 'academic';
-        }
+        // Map enrollment type to module slug using constant
+        $module_slug = isset(self::MODULE_SLUG_MAP[$membership->enrollment_type]) 
+            ? self::MODULE_SLUG_MAP[$membership->enrollment_type] 
+            : '';
         
         if ($module_slug) {
             $tax_query[] = array(
@@ -450,21 +453,26 @@ class IELTS_MS_Membership {
         }
         
         $user_id = get_current_user_id();
+        $has_access = true;
         
         // Check access for each post
         foreach ($posts as $key => $post) {
             if ($post->post_type === 'ielts_course') {
                 if (!$this->has_course_access($user_id, $post->ID)) {
-                    // Remove post from results or redirect
+                    // Remove post from results
                     unset($posts[$key]);
-                    
-                    // If this was the only post, trigger 404
-                    if (count($posts) === 0) {
-                        $query->set_404();
-                        status_header(404);
-                    }
+                    $has_access = false;
                 }
             }
+        }
+        
+        // Reindex array and check if empty
+        $posts = array_values($posts);
+        
+        // If no posts remain after filtering, trigger 404
+        if (!$has_access && empty($posts)) {
+            $query->set_404();
+            status_header(404);
         }
         
         return $posts;
