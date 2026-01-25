@@ -77,21 +77,32 @@ $payment_status = isset($_GET['payment_status']) ? $_GET['payment_status'] : '';
                                     $end_timestamp = strtotime($user_membership->end_date);
                                     $now = time();
                                     $remaining_seconds = $end_timestamp - $now;
-                                    $hours_remaining = floor($remaining_seconds / 3600);
-                                    $minutes_remaining = floor(($remaining_seconds % 3600) / 60);
                                     
-                                    if ($hours_remaining > 0) {
-                                        $time_display = sprintf('%d %s %d %s', 
-                                            $hours_remaining, 
-                                            _n('hour', 'hours', $hours_remaining, 'ielts-membership-system'),
-                                            $minutes_remaining,
-                                            _n('minute', 'minutes', $minutes_remaining, 'ielts-membership-system')
-                                        );
+                                    // Handle expired trial
+                                    if ($remaining_seconds <= 0) {
+                                        $time_display = __('expired', 'ielts-membership-system');
                                     } else {
-                                        $time_display = sprintf('%d %s', 
-                                            $minutes_remaining,
-                                            _n('minute', 'minutes', $minutes_remaining, 'ielts-membership-system')
-                                        );
+                                        $hours_remaining = floor($remaining_seconds / 3600);
+                                        $minutes_remaining = floor(($remaining_seconds % 3600) / 60);
+                                        
+                                        if ($hours_remaining > 0) {
+                                            $time_display = sprintf('%d %s', 
+                                                $hours_remaining, 
+                                                _n('hour', 'hours', $hours_remaining, 'ielts-membership-system')
+                                            );
+                                            // Only add minutes if greater than 0
+                                            if ($minutes_remaining > 0) {
+                                                $time_display .= sprintf(' %d %s', 
+                                                    $minutes_remaining,
+                                                    _n('minute', 'minutes', $minutes_remaining, 'ielts-membership-system')
+                                                );
+                                            }
+                                        } else {
+                                            $time_display = sprintf('%d %s', 
+                                                $minutes_remaining,
+                                                _n('minute', 'minutes', $minutes_remaining, 'ielts-membership-system')
+                                            );
+                                        }
                                     }
                                     ?>
                                     <p><?php printf(__('You have %s left in your membership.', 'ielts-membership-system'), '<strong>' . esc_html($time_display) . '</strong>'); ?></p>

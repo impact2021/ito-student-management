@@ -918,9 +918,7 @@ jQuery(document).ready(function($) {
     }
     
     // Trial Timer Functionality
-    console.log('Trial data check:', ieltsMS.trial);
     if (ieltsMS.trial && ieltsMS.trial.isTrial && ieltsMS.trial.endTime) {
-        console.log('Trial timer initializing...');
         let timerInterval;
         
         // Validate endTime
@@ -929,7 +927,6 @@ jQuery(document).ready(function($) {
             console.error('Invalid trial end time');
             return;
         }
-        console.log('Trial end time:', new Date(endTime * 1000));
         
         // Create and append the timer HTML using DOM methods for safety
         const timerDiv = $('<div>').addClass('ielts-ms-trial-timer');
