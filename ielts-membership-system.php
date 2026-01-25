@@ -41,7 +41,7 @@ require_once IELTS_MS_PLUGIN_DIR . 'includes/class-membership.php';
 require_once IELTS_MS_PLUGIN_DIR . 'admin/class-admin.php';
 
 // Store plugin instances to ensure they persist throughout request lifecycle
-$ielts_ms_instances = array();
+$ielts_ms_instances = [];
 
 /**
  * Initialize the plugin
