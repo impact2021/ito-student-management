@@ -40,12 +40,17 @@ require_once IELTS_MS_PLUGIN_DIR . 'includes/class-membership.php';
 // require_once IELTS_MS_PLUGIN_DIR . 'includes/class-shortcodes.php';
 require_once IELTS_MS_PLUGIN_DIR . 'admin/class-admin.php';
 
+// Store plugin instances to ensure they persist throughout request lifecycle
+$ielts_ms_instances = [];
+
 /**
  * Initialize the plugin
  */
 function ielts_ms_init() {
+    global $ielts_ms_instances;
+    
     // Initialize components
-    $membership = new IELTS_MS_Membership();
+    $ielts_ms_instances['membership'] = new IELTS_MS_Membership();
     
     // Commented out for v11.0 - simple membership only
     // $course_manager = new IELTS_MS_Course_Manager();
@@ -60,7 +65,7 @@ function ielts_ms_init() {
     
     // Initialize admin if in admin area
     if (is_admin()) {
-        new IELTS_MS_Admin();
+        $ielts_ms_instances['admin'] = new IELTS_MS_Admin();
     }
     
     // Commented out for v11.0 - no cron jobs for simple membership
