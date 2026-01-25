@@ -96,6 +96,7 @@ class IELTS_MS_Admin {
         // Trial settings
         register_setting('ielts_ms_settings', 'ielts_ms_trial_enabled');
         register_setting('ielts_ms_settings', 'ielts_ms_trial_duration');
+        register_setting('ielts_ms_settings', 'ielts_ms_trial_upgrade_link');
         
         // Email settings
         register_setting('ielts_ms_settings', 'ielts_ms_email_from_name');
@@ -168,6 +169,9 @@ class IELTS_MS_Admin {
             update_option('ielts_ms_trial_enabled', isset($_POST['trial_enabled']));
             if (isset($_POST['trial_duration'])) {
                 update_option('ielts_ms_trial_duration', intval($_POST['trial_duration']));
+            }
+            if (isset($_POST['trial_upgrade_link'])) {
+                update_option('ielts_ms_trial_upgrade_link', esc_url_raw($_POST['trial_upgrade_link']));
             }
             
             // Update email settings
@@ -419,6 +423,13 @@ class IELTS_MS_Admin {
                         <td>
                             <input type="number" min="1" max="720" name="trial_duration" value="<?php echo esc_attr(get_option('ielts_ms_trial_duration', 72)); ?>" class="small-text"> hours
                             <p class="description">Duration of the free trial in hours (default: 72 hours = 3 days)</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Upgrade Link</th>
+                        <td>
+                            <input type="url" name="trial_upgrade_link" value="<?php echo esc_attr(get_option('ielts_ms_trial_upgrade_link', '')); ?>" class="regular-text" placeholder="https://example.com/account/#extend-course">
+                            <p class="description">URL for the "Upgrade to Full Membership" link in the trial timer. This should point to the account page with the 'Extend my course' tab (e.g., add #extend-course to your account page URL).</p>
                         </td>
                     </tr>
                 </table>

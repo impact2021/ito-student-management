@@ -354,11 +354,30 @@ function ielts_ms_enqueue_assets() {
     
     wp_enqueue_script('ielts-membership-script', IELTS_MS_PLUGIN_URL . 'assets/js/script.js', $script_deps, IELTS_MS_VERSION, true);
     
+    // Get trial information for current user
+    $trial_data = array(
+        'isTrial' => false,
+        'endTime' => '',
+        'upgradeLink' => get_option('ielts_ms_trial_upgrade_link', '')
+    );
+    
+    if (is_user_logged_in()) {
+        $user_id = get_current_user_id();
+        $membership = new IELTS_MS_Membership();
+        $user_membership = $membership->get_user_membership($user_id);
+        
+        if ($user_membership && $user_membership->status === 'active' && $user_membership->is_trial == 1) {
+            $trial_data['isTrial'] = true;
+            $trial_data['endTime'] = strtotime($user_membership->end_date);
+        }
+    }
+    
     wp_localize_script('ielts-membership-script', 'ieltsMS', array(
         'ajaxUrl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('ielts_ms_nonce'),
         'stripePublicKey' => get_option('ielts_ms_stripe_publishable_key', ''),
-        'stripeEnabled' => get_option('ielts_ms_stripe_enabled', true)
+        'stripeEnabled' => get_option('ielts_ms_stripe_enabled', true),
+        'trial' => $trial_data
     ));
 }
 add_action('wp_enqueue_scripts', 'ielts_ms_enqueue_assets');

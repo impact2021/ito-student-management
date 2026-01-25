@@ -15,7 +15,22 @@ jQuery(document).ready(function($) {
         // Add active class to clicked tab and corresponding pane
         $(this).addClass('active');
         $('#' + targetTab).addClass('active');
+        
+        // Update URL hash without jumping
+        if (history.pushState) {
+            history.pushState(null, null, '#' + targetTab);
+        }
     });
+    
+    // Check for hash in URL on page load and switch to that tab
+    if (window.location.hash) {
+        const hash = window.location.hash.substring(1); // Remove the # character
+        const $targetTab = $('.ielts-ms-tab-link[data-tab="' + hash + '"]');
+        
+        if ($targetTab.length) {
+            $targetTab.click();
+        }
+    }
     
     // Initialize Stripe if enabled
     let stripe = null;
@@ -898,5 +913,49 @@ jQuery(document).ready(function($) {
                 alert('An error occurred. Please try again.');
             }
         });
+    }
+    
+    // Trial Timer Functionality
+    if (ieltsMS.trial && ieltsMS.trial.isTrial && ieltsMS.trial.endTime) {
+        // Create and append the timer HTML
+        const timerHtml = `
+            <div class="ielts-ms-trial-timer">
+                <div class="timer-header">Free Trial Time Remaining</div>
+                <div class="timer-display" id="trial-countdown">--:--</div>
+                ${ieltsMS.trial.upgradeLink ? `<a href="${ieltsMS.trial.upgradeLink}" class="timer-upgrade-link">Upgrade to Full Membership</a>` : ''}
+            </div>
+        `;
+        $('body').append(timerHtml);
+        
+        // Function to update the timer
+        function updateTrialTimer() {
+            const now = Math.floor(Date.now() / 1000); // Current time in seconds
+            const endTime = parseInt(ieltsMS.trial.endTime);
+            const remaining = endTime - now;
+            
+            if (remaining <= 0) {
+                // Trial has expired
+                $('#trial-countdown').text('Expired').addClass('warning');
+                clearInterval(timerInterval);
+                return;
+            }
+            
+            // Calculate hours and minutes
+            const hours = Math.floor(remaining / 3600);
+            const minutes = Math.floor((remaining % 3600) / 60);
+            
+            // Format the display
+            const displayText = hours + 'h ' + minutes + 'm';
+            $('#trial-countdown').text(displayText);
+            
+            // Add warning class if less than 2 hours remaining
+            if (remaining < 7200) { // 2 hours
+                $('#trial-countdown').addClass('warning');
+            }
+        }
+        
+        // Update immediately and then every minute
+        updateTrialTimer();
+        const timerInterval = setInterval(updateTrialTimer, 60000); // Update every minute
     }
 });
