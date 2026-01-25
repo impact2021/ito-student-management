@@ -58,23 +58,28 @@ class IELTS_MS_Membership {
                 'updated_date' => current_time('mysql')
             );
             
+            $format = array('%s', '%s', '%s'); // status, end_date, updated_date
+            
             // Only update enrollment_type if it's an upgrade or new purchase (not trial)
             if (!$is_trial && $enrollment_type === 'both') {
                 $update_data['enrollment_type'] = $enrollment_type;
+                $format[] = '%s';
             } elseif (!$is_trial && $existing->enrollment_type !== 'both') {
                 $update_data['enrollment_type'] = $enrollment_type;
+                $format[] = '%s';
             }
             
             // Update is_trial flag when upgrading from trial to paid
             if (!$is_trial && $existing->is_trial == 1) {
                 $update_data['is_trial'] = 0;
+                $format[] = '%d';
             }
             
             $result = $wpdb->update(
                 $table,
                 $update_data,
                 array('id' => $existing->id),
-                array_fill(0, count($update_data), '%s'),
+                $format,
                 array('%d')
             );
             $membership_id = $existing->id;
