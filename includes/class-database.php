@@ -12,12 +12,14 @@ class IELTS_MS_Database {
     private static $memberships_table;
     private static $payments_table;
     private static $trial_usage_table;
+    private static $membership_courses_table;
     
     public function __construct() {
         global $wpdb;
         self::$memberships_table = $wpdb->prefix . 'ielts_ms_memberships';
         self::$payments_table = $wpdb->prefix . 'ielts_ms_payments';
         self::$trial_usage_table = $wpdb->prefix . 'ielts_ms_trial_usage';
+        self::$membership_courses_table = $wpdb->prefix . 'ielts_ms_membership_courses';
     }
     
     /**
@@ -80,10 +82,24 @@ class IELTS_MS_Database {
             KEY user_id (user_id)
         ) $charset_collate;";
         
+        // Membership courses configuration table
+        $membership_courses_table = $wpdb->prefix . 'ielts_ms_membership_courses';
+        $sql_membership_courses = "CREATE TABLE IF NOT EXISTS $membership_courses_table (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            membership_type varchar(50) NOT NULL,
+            course_id bigint(20) NOT NULL,
+            added_date datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY membership_course (membership_type, course_id),
+            KEY membership_type (membership_type),
+            KEY course_id (course_id)
+        ) $charset_collate;";
+        
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         dbDelta($sql_memberships);
         dbDelta($sql_payments);
         dbDelta($sql_trial_usage);
+        dbDelta($sql_membership_courses);
     }
     
     /**
@@ -102,5 +118,10 @@ class IELTS_MS_Database {
     public static function get_trial_usage_table() {
         global $wpdb;
         return $wpdb->prefix . 'ielts_ms_trial_usage';
+    }
+    
+    public static function get_membership_courses_table() {
+        global $wpdb;
+        return $wpdb->prefix . 'ielts_ms_membership_courses';
     }
 }
