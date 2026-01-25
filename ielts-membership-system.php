@@ -133,29 +133,19 @@ function ielts_ms_protect_content() {
     // If not an archive, check individual posts
     if (!$is_protected_content && $queried_object && isset($queried_object->post_type)) {
         $post_type = $queried_object->post_type;
-        $post_slug = isset($queried_object->post_name) ? $queried_object->post_name : '';
-        
-        // URL patterns use hyphens as defined in the rewrite slugs
-        $protected_url_patterns = array('/ielts-course/', '/ielts-lesson/', '/ielts-resource/', '/ielts-quiz/');
         
         // Check if it's a protected custom post type (courses, lessons, resources, quizzes)
         if (in_array($post_type, $protected_post_types)) {
             $is_protected_content = true;
         }
         
-        // Also check by slug patterns
-        if (!$is_protected_content) {
-            foreach ($protected_post_types as $pattern) {
-                if (strpos($post_slug, $pattern) !== false) {
-                    $is_protected_content = true;
-                    break;
-                }
-            }
-        }
-        
-        // Check current URL path for protected patterns (matches rewrite slugs)
+        // Also check current URL path for protected patterns as a fallback
+        // This catches edge cases where post_type might not be set correctly
         if (!$is_protected_content) {
             $current_url = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
+            // URL patterns use hyphens as defined in the rewrite slugs
+            $protected_url_patterns = array('/ielts-course/', '/ielts-lesson/', '/ielts-resource/', '/ielts-quiz/');
+            
             foreach ($protected_url_patterns as $pattern) {
                 if (strpos($current_url, $pattern) !== false) {
                     $is_protected_content = true;
