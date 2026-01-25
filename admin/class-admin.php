@@ -949,7 +949,7 @@ class IELTS_MS_Admin {
             $status_parts = array();
             
             // Add trial/full indicator
-            if ($membership->is_trial == 1) {
+            if ((int)$membership->is_trial === 1) {
                 $status_parts[] = 'Free Trial';
             } else {
                 $status_parts[] = 'Full Membership';
@@ -979,7 +979,7 @@ class IELTS_MS_Admin {
             $now = time();
             $remaining_seconds = $end_timestamp - $now;
             
-            if ($membership->is_trial == 1) {
+            if ((int)$membership->is_trial === 1) {
                 // For trials, show hours and minutes
                 $hours = floor($remaining_seconds / 3600);
                 $minutes = floor(($remaining_seconds % 3600) / 60);
@@ -1085,7 +1085,7 @@ class IELTS_MS_Admin {
                     $is_active = $status === 'active' && strtotime($end_date) > time();
                     if ($is_active) {
                         echo '<span style="color: #2271b1; font-weight: 600;">✓ Active</span>';
-                        if ($is_trial == 1) {
+                        if ((int)$is_trial === 1) {
                             echo ' <span style="color: #999;">(Free Trial)</span>';
                         }
                     } else {
