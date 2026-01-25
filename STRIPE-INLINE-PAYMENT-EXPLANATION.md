@@ -31,7 +31,7 @@ The IELTS Membership System uses **Stripe's Payment Elements** to provide a seam
 6. **Enter Card Details**: They type their credit card number, expiration date, and CVC code directly into the embedded form
 7. **Click Register & Pay**: With one click, the system:
    - Creates their user account
-   - Processes the payment
+   - Processes the payment (example: $24.95 for 90-day membership - pricing is configurable in WordPress settings)
    - Activates their membership
 8. **Redirect to Login**: After successful payment, they're sent to the login page to access their account
 
@@ -424,6 +424,7 @@ To make this work, you need to configure your Stripe account:
    - Most hosting providers offer free SSL certificates (Let's Encrypt)
 
 3. **Test Cards** (for testing in Stripe Test Mode):
+   - **IMPORTANT**: These are Stripe's official test card numbers - only use in Test Mode, never in production
    - Success: `4242 4242 4242 4242`
    - Decline: `4000 0000 0000 0002`
    - Any future expiration date (e.g., 12/25)
@@ -631,20 +632,21 @@ Yes, extremely safe:
 ## Additional Resources
 
 ### **Stripe Documentation**
-- Payment Elements: https://stripe.com/docs/payments/payment-element
-- Payment Intents: https://stripe.com/docs/payments/payment-intents
-- Security: https://stripe.com/docs/security
+- Payment Elements: https://stripe.com/docs/payments/payment-element (Guide to implementing embedded payment forms)
+- Payment Intents: https://stripe.com/docs/payments/payment-intents (Understanding the Payment Intent API)
+- Security: https://stripe.com/docs/security (Stripe's security and compliance measures)
+- Testing: https://stripe.com/docs/testing (Test card numbers and testing guide)
 
 ### **Files in This System**
-- Frontend JavaScript: `/assets/js/script.js`
-- Backend Gateway: `/includes/class-stripe-gateway.php`
-- Registration Template: `/templates/register-form.php`
-- Account Page Template: `/templates/account-page.php`
+- Frontend JavaScript: `/assets/js/script.js` (Handles Stripe Elements initialization and payment processing)
+- Backend Gateway: `/includes/class-stripe-gateway.php` (Stripe API integration and payment confirmation)
+- Registration Template: `/templates/register-form.php` (Registration form with embedded payment form)
+- Account Page Template: `/templates/account-page.php` (Account page for purchasing extensions)
 
 ### **Admin Areas**
-- Stripe Settings: WordPress Admin → Membership → Settings
-- View Members: WordPress Admin → Membership → Members
-- View Payments: WordPress Admin → Membership → Payments
+- Stripe Settings: WordPress Admin → Membership → Settings (Configure API keys and enable Stripe)
+- View Members: WordPress Admin → Membership → Members (See all registered members and their status)
+- View Payments: WordPress Admin → Membership → Payments (Track all payment transactions)
 
 ---
 
