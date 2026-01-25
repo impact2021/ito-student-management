@@ -358,7 +358,7 @@ function ielts_ms_enqueue_assets() {
     $trial_data = array(
         'isTrial' => false,
         'endTime' => '',
-        'upgradeLink' => get_option('ielts_ms_trial_upgrade_link', '')
+        'upgradeLink' => esc_url(get_option('ielts_ms_trial_upgrade_link', ''))
     );
     
     if (is_user_logged_in()) {

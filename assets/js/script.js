@@ -917,12 +917,24 @@ jQuery(document).ready(function($) {
     
     // Trial Timer Functionality
     if (ieltsMS.trial && ieltsMS.trial.isTrial && ieltsMS.trial.endTime) {
+        // Declare timerInterval before use
+        let timerInterval;
+        
         // Create and append the timer HTML
+        const escapeHtml = function(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+        
+        const upgradeLink = ieltsMS.trial.upgradeLink ? 
+            `<a href="${escapeHtml(ieltsMS.trial.upgradeLink)}" class="timer-upgrade-link">Upgrade to Full Membership</a>` : '';
+        
         const timerHtml = `
             <div class="ielts-ms-trial-timer">
                 <div class="timer-header">Free Trial Time Remaining</div>
                 <div class="timer-display" id="trial-countdown">--:--</div>
-                ${ieltsMS.trial.upgradeLink ? `<a href="${ieltsMS.trial.upgradeLink}" class="timer-upgrade-link">Upgrade to Full Membership</a>` : ''}
+                ${upgradeLink}
             </div>
         `;
         $('body').append(timerHtml);
@@ -930,7 +942,7 @@ jQuery(document).ready(function($) {
         // Function to update the timer
         function updateTrialTimer() {
             const now = Math.floor(Date.now() / 1000); // Current time in seconds
-            const endTime = parseInt(ieltsMS.trial.endTime);
+            const endTime = Number(ieltsMS.trial.endTime);
             const remaining = endTime - now;
             
             if (remaining <= 0) {
@@ -956,6 +968,6 @@ jQuery(document).ready(function($) {
         
         // Update immediately and then every minute
         updateTrialTimer();
-        const timerInterval = setInterval(updateTrialTimer, 60000); // Update every minute
+        timerInterval = setInterval(updateTrialTimer, 60000); // Update every minute
     }
 });
