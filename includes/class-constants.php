@@ -21,6 +21,8 @@ class IELTS_MS_Constants {
     
     /**
      * Enrollment type to module slug mapping
+     * Note: 'both' enrollment type doesn't have a specific module slug
+     * as it grants access to all modules
      */
     const MODULE_SLUG_MAP = array(
         'general_training' => 'general-training',
