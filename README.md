@@ -82,6 +82,8 @@ A complete membership and payment system for IELTS preparation courses with PayP
 
 **Stripe Webhook URL:** `https://yoursite.com/wp-admin/admin-ajax.php?action=ielts_ms_stripe_webhook`
 
+**📖 Stripe Integration Guide:** For detailed implementation guidance and solutions to common Stripe issues (50% width, payment method type errors), see [STRIPE_INTEGRATION_GUIDE.md](STRIPE_INTEGRATION_GUIDE.md)
+
 ### Login Settings
 
 - Enable/disable custom login page replacement
