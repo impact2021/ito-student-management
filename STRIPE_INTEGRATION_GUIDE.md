@@ -147,8 +147,49 @@ paymentElement.mount('#payment-element');
 public function create_payment_intent() {
     check_ajax_referer('ielts_ms_nonce', 'nonce');
     
+    // Validate required POST parameters
+    if (!isset($_POST['amount']) || !isset($_POST['duration_days']) || 
+        !isset($_POST['payment_type']) || !isset($_POST['plan_key'])) {
+        wp_send_json_error(array('message' => 'Missing required parameters'));
+    }
+    
     $amount = floatval($_POST['amount']);
+    $duration_days = intval($_POST['duration_days']);
+    $payment_type = sanitize_text_field($_POST['payment_type']);
+    $plan_key = sanitize_text_field($_POST['plan_key']);
+    $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : get_current_user_id();
+    
+    // Validate amount is positive and reasonable (max $1000)
+    if ($amount <= 0 || $amount > 1000) {
+        wp_send_json_error(array('message' => 'Invalid amount'));
+    }
+    
+    // Validate duration_days is positive
+    if ($duration_days <= 0) {
+        wp_send_json_error(array('message' => 'Invalid duration'));
+    }
+    
     $secret_key = get_option('ielts_ms_stripe_secret_key', '');
+    
+    if (empty($secret_key)) {
+        wp_send_json_error(array('message' => 'Stripe is not configured'));
+    }
+    
+    // Get email for receipt
+    $email = '';
+    if ($user_id) {
+        $user = get_userdata($user_id);
+        if ($user) {
+            $email = $user->user_email;
+        }
+    }
+    
+    if (empty($email) && isset($_POST['email'])) {
+        $email = sanitize_email($_POST['email']);
+    }
+    
+    // Create pending payment record
+    $payment_id = $this->record_payment($user_id, $amount, $duration_days, null, 'pending', $payment_type);
     
     // Prepare Stripe API request for Payment Intent
     $stripe_data = array(
@@ -159,7 +200,8 @@ public function create_payment_intent() {
             'user_id' => $user_id,
             'duration_days' => $duration_days,
             'payment_type' => $payment_type,
-            'payment_id' => $payment_id
+            'payment_id' => $payment_id,
+            'plan_key' => $plan_key
         )
     );
     
@@ -179,6 +221,10 @@ public function create_payment_intent() {
         'timeout' => 60
     ));
     
+    if (is_wp_error($response)) {
+        wp_send_json_error(array('message' => 'Failed to create payment intent'));
+    }
+    
     $body = json_decode(wp_remote_retrieve_body($response), true);
     
     if (isset($body['client_secret'])) {
@@ -186,6 +232,8 @@ public function create_payment_intent() {
             'clientSecret' => $body['client_secret'],
             'payment_id' => $payment_id
         ));
+    } else {
+        wp_send_json_error(array('message' => 'Failed to create payment intent'));
     }
 }
 ```
@@ -294,24 +342,27 @@ elements.submit().then(function(submitResult) {
 
 ```javascript
 function createPaymentIntent() {
-    fetch(ajaxUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            action: 'create_payment_intent',
-            nonce: nonce,
-            amount: document.querySelector('input[name="membership_amount"]').value,
-            duration_days: document.querySelector('input[name="membership_days"]').value,
+    $.ajax({
+        url: ieltsMS.ajaxUrl,
+        type: 'POST',
+        data: {
+            action: 'ielts_ms_create_payment_intent',
+            nonce: ieltsMS.nonce,
+            amount: $('input[name="membership_amount"]').val(),
+            duration_days: $('input[name="membership_days"]').val(),
             payment_type: 'new',
-            plan_key: document.querySelector('input[name="membership_plan"]').value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.data.clientSecret) {
-            confirmPayment(data.data.clientSecret, data.data.payment_id);
+            plan_key: $('input[name="membership_plan"]').val(),
+            is_registration: 'true'
+        },
+        success: function(response) {
+            if (response.success && response.data.clientSecret) {
+                confirmPayment(response.data.clientSecret, response.data.payment_id);
+            } else {
+                console.error('Failed to create payment intent:', response.data.message);
+            }
+        },
+        error: function() {
+            console.error('An error occurred while creating payment intent');
         }
     });
 }
@@ -343,22 +394,24 @@ function confirmPayment(clientSecret, paymentId) {
 
 ```javascript
 function notifyServerOfSuccess(paymentIntentId, paymentId) {
-    fetch(ajaxUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            action: 'confirm_payment',
-            nonce: nonce,
+    $.ajax({
+        url: ieltsMS.ajaxUrl,
+        type: 'POST',
+        data: {
+            action: 'ielts_ms_confirm_payment',
+            nonce: ieltsMS.nonce,
             payment_intent_id: paymentIntentId,
             payment_id: paymentId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = data.data.redirect;
+        },
+        success: function(response) {
+            if (response.success) {
+                window.location.href = response.data.redirect;
+            } else {
+                console.error('Failed to confirm payment:', response.data.message);
+            }
+        },
+        error: function() {
+            console.error('An error occurred while confirming payment');
         }
     });
 }
@@ -502,5 +555,5 @@ If you encounter issues not covered in this guide:
 
 ---
 
-**Last Updated:** January 2026  
+**Last Updated:** January 2024  
 **Repository:** impact2021/ito-student-management
